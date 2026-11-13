@@ -233,7 +233,7 @@ const GAMES = {
     name: 'Sıra Hafızası', skill: 'Hafıza', color: '#F26B5B', unit: 'kare', timed: false,
     howto: 'Kareler sırayla yanacak. <b>İzle</b>, sonra <b>aynı sırayla</b> dokun. Her doğru turda sıra bir kare uzar. <b>2 hata</b> hakkın var.',
     start(stage, api) {
-      let alive = true, len = 3, best = 0, lives = 2, seq = [], idx = 0, accept = false;
+      let alive = true, len = ZM.startLevel(S.lvl.sira, 3, 9), best = 0, lives = 2, seq = [], idx = 0, accept = false;
       stage.innerHTML = '<div class="msg">İzle…</div><div class="grid9">' +
         Array.from({ length: 9 }, (_, i) => `<button class="tile" data-i="${i}" aria-label="Kare ${i + 1}"></button>`).join('') + '</div>';
       const tiles = [...stage.querySelectorAll('.tile')], m = $('.msg', stage);
@@ -263,7 +263,7 @@ const GAMES = {
           accept = false; buzz(120); beep(150, .25, 'square'); lives--; stat();
           light(i, 450, 'bad'); tiles[seq[idx]].classList.add('hint');
           await sleep(900); tiles[seq[idx]].classList.remove('hint');
-          if (lives <= 0) { alive = false; api.end(best, best ? `${best} karelik sırayı aklında tuttun.` : 'Isınma turu sayalım.'); return; }
+          if (lives <= 0) { alive = false; if (best) S.lvl.sira = best; api.end(best, best ? `${best} karelik sırayı aklında tuttun.` : 'Isınma turu sayalım.'); return; }
           say('Olsun, yeni sıra geliyor', 'bad'); await sleep(900); round();
         }
       });
@@ -347,7 +347,7 @@ const GAMES = {
     name: 'Hızlı Hesap', skill: 'Hız', color: '#2A9D8F', unit: 'doğru', timed: true, secs: 45,
     howto: 'İşlemler gelecek, <b>doğru sonuca</b> dokun. Üst üste doğru yaptıkça sorular zorlaşır, yanlışta biraz kolaylaşır. 45 saniye.',
     start(stage, api) {
-      let ok = 0, bad = 0, lvl = 1, top = 1, run = 0, ans;
+      let ok = 0, bad = 0, lvl = ZM.startLevel(S.lvl.hesap, 1, 4), top = lvl, run = 0, ans;
       stage.innerHTML = '<div class="lvl"></div><div class="q"></div><div class="choices4"></div><div class="fb"></div>';
       const Q = $('.q', stage), B = $('.choices4', stage), F = $('.fb', stage), L = $('.lvl', stage);
       const r = (a, b) => a + rnd(b - a + 1);
@@ -377,7 +377,7 @@ const GAMES = {
         api.stat(`Doğru ${ok}`); next();
       });
       api.stat('Doğru 0'); next();
-      const t = makeTimer(this.secs * 1000, l => api.time(l / (this.secs * 1000)), () => api.end(ok, `${ok} doğru, ${bad} yanlış, en yüksek seviye ${top}.`));
+      const t = makeTimer(this.secs * 1000, l => api.time(l / (this.secs * 1000)), () => { S.lvl.hesap = top; api.end(ok, `${ok} doğru, ${bad} yanlış, en yüksek seviye ${top}.`); });
       return () => t.stop();
     }
   },

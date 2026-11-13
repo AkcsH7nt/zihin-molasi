@@ -38,7 +38,10 @@
     return s;
   }
 
-  const ZM = { dayKey, dayNum, streak, dailyGames, loadState };
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const startLevel = (saved, min, max) => (saved == null ? min : clamp(saved - 1, min, max));
+
+  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, startLevel };
   g.ZM = Object.assign(g.ZM || {}, ZM);
   if (typeof module !== 'undefined' && module.exports) module.exports = g.ZM;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

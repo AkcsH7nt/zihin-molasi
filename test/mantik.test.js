@@ -48,3 +48,10 @@ test('loadState eski kayda varsayılan alanları ekler', () => {
   assert.equal(s.sound, true);
   assert.deepEqual(s.daily, {});
 });
+
+test('startLevel: kayıt yoksa en alttan, varsa bir tık aşağıdan başlar', () => {
+  assert.equal(ZM.startLevel(undefined, 3, 9), 3);
+  assert.equal(ZM.startLevel(7, 3, 9), 6);
+  assert.equal(ZM.startLevel(3, 3, 9), 3);
+  assert.equal(ZM.startLevel(20, 1, 4), 4);
+});
