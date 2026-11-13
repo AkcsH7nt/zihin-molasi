@@ -1,11 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#F26B5B"/>
-  <g fill="none" stroke="#fff" stroke-width="18" stroke-linecap="round" opacity=".92">
-    <path d="M200 205 q-18 -28 0 -56 q18 -28 0 -56"/>
-    <path d="M250 205 q-18 -28 0 -56 q18 -28 0 -56"/>
-    <path d="M300 205 q-18 -28 0 -56 q18 -28 0 -56"/>
+  <defs>
+    <clipPath id="c"><path d="M32 22C32 50 47 58 45 72C43 86 31 94 34 113Q36 124 60 124Q84 124 86 113C89 94 77 86 75 72C73 58 88 50 88 22Z"/></clipPath>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EC6A34"/><stop offset="1" stop-color="#BF3A1E"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#FFD9CC"/>
+  <circle cx="256" cy="256" r="230" fill="#FFE9E0"/>
+  <g transform="translate(58 14) scale(3.3)">
+    <ellipse cx="60" cy="128" rx="42" ry="8.5" fill="#fff" stroke="#6B4A4A" stroke-width="3"/>
+    <ellipse cx="60" cy="127" rx="29" ry="4.5" fill="#FFDCD2"/>
+    <path d="M32 22C32 50 47 58 45 72C43 86 31 94 34 113Q36 124 60 124Q84 124 86 113C89 94 77 86 75 72C73 58 88 50 88 22Z" fill="#fff" fill-opacity=".8"/>
+    <g clip-path="url(#c)"><rect x="20" y="36" width="80" height="92" fill="url(#g)"/><ellipse cx="60" cy="36" rx="27" ry="4.5" fill="#F7A066"/></g>
+    <path d="M32 22C32 50 47 58 45 72C43 86 31 94 34 113Q36 124 60 124Q84 124 86 113C89 94 77 86 75 72C73 58 88 50 88 22Z" fill="none" stroke="#6B4A4A" stroke-width="3.6" stroke-linejoin="round"/>
+    <path d="M40 42c1 10 8 17 8 28" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" opacity=".55"/>
+    <circle cx="42.5" cy="106" r="4.6" fill="#FFB3A6"/><circle cx="77.5" cy="106" r="4.6" fill="#FFB3A6"/>
+    <circle cx="50" cy="99" r="4.4" fill="#3A2420"/><circle cx="70" cy="99" r="4.4" fill="#3A2420"/>
+    <circle cx="51.5" cy="97.5" r="1.5" fill="#fff"/><circle cx="71.5" cy="97.5" r="1.5" fill="#fff"/>
+    <path d="M54.5 106q5.5 4.5 11 0" fill="none" stroke="#3A2420" stroke-width="2.4" stroke-linecap="round"/>
   </g>
-  <path d="M150 240 H350 V290 A100 100 0 0 1 250 390 A100 100 0 0 1 150 290 Z" fill="#fff"/>
-  <circle cx="362" cy="285" r="34" fill="none" stroke="#fff" stroke-width="22"/>
-  <rect x="122" y="404" width="268" height="24" rx="12" fill="#fff"/>
 </svg>

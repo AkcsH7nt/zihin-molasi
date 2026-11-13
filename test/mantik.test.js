@@ -154,3 +154,96 @@ test('streak: dün boşsa ve bugün henüz oynanmadıysa seri bekler (affedilir)
 test('streak: dün ve önceki gün boşsa seri biter', () => {
   assert.deepEqual(ZM.streak(new Set([gun(3), gun(4)]), T), { n: 0, shielded: false });
 });
+
+// ---- 2. tur: şirin tasarım + motivasyon ----
+test('loadState: tanışma ve mola saati alanları varsayılanla gelir', () => {
+  const s = ZM.loadState({ hist: [] });
+  assert.equal(s.onb, false);
+  assert.equal(s.slot, null);
+});
+
+test('weekProgress: pazartesiden bugüne oynanan gün sayısı, hedef 5', () => {
+  // T = 13 Kasım 2026 Cuma; hafta 9 Kasım Pazartesi başlar
+  const days = new Set([gun(0), gun(1), gun(4), gun(5), gun(6)]); // Cu, Pe, Pt + geçen hafta Paz, Cmt
+  assert.deepEqual(ZM.weekProgress(days, T), { done: 3, goal: 5 });
+});
+
+test('weekProgress: hedef aşılınca 5 ile sınırlanmaz, gerçek sayı döner', () => {
+  const days = new Set([0, 1, 2, 3, 4].map(gun));
+  assert.equal(ZM.weekProgress(days, T).done, 5);
+});
+
+test('weekProgress: pazar günü hafta hâlâ pazartesiden sayılır', () => {
+  const pazar = new Date(2026, 10, 15, 9, 0);
+  const days = new Set(['2026-11-09', '2026-11-15', '2026-11-08']);
+  assert.equal(ZM.weekProgress(days, pazar).done, 2);
+});
+
+test('inSlot: seçilen mola saatinin içinde mi', () => {
+  assert.equal(ZM.inSlot('ikindi', 15), true);
+  assert.equal(ZM.inSlot('ikindi', 17), true);
+  assert.equal(ZM.inSlot('ikindi', 18), false);
+  assert.equal(ZM.inSlot(null, 15), false);
+  assert.equal(ZM.inSlot('sabah', 9), true);
+});
+
+const durum = o => Object.assign({ everPlayed: true, playedToday: false, doneToday: false, gap: 1, weekday: 3, weekDone: 1, hour: 10, slot: null }, o);
+
+test('mascot: ilk kez gelen karşılanır', () => {
+  assert.deepEqual(ZM.mascot(durum({ everPlayed: false, gap: null })), { mood: 'heyecanli', key: 'hosgeldin' });
+});
+
+test('mascot: bugünkü mola bittiyse gururlu', () => {
+  assert.deepEqual(ZM.mascot(durum({ playedToday: true, doneToday: true, gap: 0 })), { mood: 'gururlu', key: 'tamam' });
+});
+
+test('mascot: uzun aradan sonra suçlamadan karşılar', () => {
+  assert.deepEqual(ZM.mascot(durum({ gap: 5 })), { mood: 'mutlu', key: 'ozledim' });
+});
+
+test('mascot: dün atlandıysa seri bekliyor der', () => {
+  assert.deepEqual(ZM.mascot(durum({ gap: 2 })), { mood: 'mutlu', key: 'bekliyor' });
+});
+
+test('mascot: haftalık hedefe 1 kala heyecanlanır', () => {
+  assert.deepEqual(ZM.mascot(durum({ weekDone: 4 })), { mood: 'heyecanli', key: 'sonbir' });
+});
+
+test('mascot: pazartesi yeni başlangıç', () => {
+  assert.deepEqual(ZM.mascot(durum({ weekday: 1, weekDone: 0 })), { mood: 'mutlu', key: 'yenihafta' });
+});
+
+test('mascot: seçilen mola saatinde çay vakti der', () => {
+  assert.deepEqual(ZM.mascot(durum({ slot: 'sabah', hour: 10 })), { mood: 'heyecanli', key: 'cayvakti' });
+});
+
+test('mascot: gece uykulu, gündüz saate göre selam', () => {
+  assert.deepEqual(ZM.mascot(durum({ hour: 23 })), { mood: 'uykulu', key: 'gece' });
+  assert.deepEqual(ZM.mascot(durum({ hour: 10 })), { mood: 'mutlu', key: 'selam' });
+});
+
+test('mascot: bugün oynadı ama mola bitmedi → devam', () => {
+  assert.deepEqual(ZM.mascot(durum({ playedToday: true, gap: 0 })), { mood: 'mutlu', key: 'devam' });
+});
+
+test('highlight: yeni rekor varsa günün yıldızı odur', () => {
+  const r = [{ id: 'a', s: 10, best: 20 }, { id: 'b', s: 31, best: 30 }, { id: 'c', s: 5, best: null }];
+  assert.deepEqual(ZM.highlight(r), { id: 'b', record: true });
+});
+
+test('highlight: rekor yoksa rekoruna en çok yaklaşılan oyun', () => {
+  const r = [{ id: 'a', s: 10, best: 20 }, { id: 'b', s: 27, best: 30 }];
+  assert.deepEqual(ZM.highlight(r), { id: 'b', record: false });
+});
+
+test('highlight: sonuç yoksa null', () => {
+  assert.equal(ZM.highlight([]), null);
+});
+
+test('shareText: seri ve adres içerir, skor içermez', () => {
+  const t = ZM.shareText(4, 'https://ornek.test/');
+  assert.ok(t.includes('4 gün'));
+  assert.ok(t.includes('https://ornek.test/'));
+  assert.ok(ZM.shareText(0, 'u').includes('u'));
+  assert.ok(!ZM.shareText(0, 'u').includes('0 gün'));
+});
