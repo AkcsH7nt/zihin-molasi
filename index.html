@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FBF6EE">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zihin Molası">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Zihin Molası</title>
+<style>
+:root{
+  --bg:#FBF6EE;--card:#FFFFFF;--ink:#2B2A33;--soft:#6B6878;--line:#ECE4D8;
+  --coral:#F26B5B;--coral-d:#C9503F;--teal:#2A9D8F;--mustard:#E0A526;--plum:#7B5EA7;
+  --ok:#2E9E5B;--bad:#E04848;
+  --shadow:0 1px 0 rgba(43,42,51,.05),0 8px 24px rgba(43,42,51,.07);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#18171D;--card:#24232B;--ink:#F3EFE8;--soft:#A7A3B3;--line:#363441;--shadow:none}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif}
+body{min-height:100vh;min-height:100dvh;overscroll-behavior:none}
+#app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 24px)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation;padding:0}
+h1,h2,h3,p{margin:0}
+.card{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.btn{display:block;width:100%;padding:16px;border-radius:16px;background:var(--coral);color:#fff;font-weight:750;
+  font-size:18px;box-shadow:0 4px 0 var(--coral-d);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--coral-d)}
+.btn.ghost{background:var(--card);color:var(--ink);box-shadow:0 3px 0 var(--line);border:1px solid var(--line)}
+.btn.ghost:active{box-shadow:0 0 0 var(--line)}
+.link{display:block;margin:14px auto 0;color:var(--soft);font-size:15px;padding:8px 12px}
+
+/* ana sayfa */
+.top{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.top .brand{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--coral)}
+.top h1{font-size:28px;line-height:1.15;margin-top:4px}
+.top .sub{color:var(--soft);margin-top:6px;font-size:16px;line-height:1.4}
+.icon-btn{margin-left:auto;flex:none;width:44px;height:44px;border-radius:14px;background:var(--card);border:1px solid var(--line);
+  font-size:20px;display:grid;place-items:center}
+.streak{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.streak .fire{font-size:30px}
+.streak b{font-size:20px}
+.streak small{display:block;color:var(--soft);font-size:13px;margin-top:2px}
+.week{display:flex;justify-content:space-between;width:100%;padding-top:12px;border-top:1px solid var(--line)}
+.week span{width:30px;text-align:center;font-size:10px;color:var(--soft)}
+.week span i{display:block;width:16px;height:16px;border-radius:50%;margin:0 auto 3px;background:var(--line)}
+.week span.on i{background:var(--coral)}
+.week span.today{color:var(--ink);font-weight:700}
+.daily{margin-bottom:22px;background:linear-gradient(135deg,#FFF1E6,#FFE4DC);border-color:#F8D3C6}
+@media (prefers-color-scheme:dark){.daily{background:linear-gradient(135deg,#2E2630,#352A2C);border-color:#463639}}
+.daily h2{font-size:21px}
+.daily p{color:var(--soft);margin:4px 0 12px;font-size:15px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:var(--card);
+  border:1px solid var(--line);font-size:14px;font-weight:600}
+.chip .dot{width:10px;height:10px;border-radius:50%}
+.chip.done{opacity:.55;text-decoration:line-through}
+.sec{font-size:15px;color:var(--soft);font-weight:700;margin:0 4px 10px;text-transform:uppercase;letter-spacing:.06em}
+.games{display:flex;flex-direction:column;gap:10px}
+.grow{display:flex;align-items:center;gap:14px;text-align:left;width:100%}
+.gico{flex:none;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;color:#fff}
+.gico svg{width:28px;height:28px}
+.ginfo{flex:1;min-width:0}
+.ginfo b{display:block;font-size:17px}
+.ginfo small{color:var(--soft);font-size:13px}
+.gbest{text-align:right;font-size:12px;color:var(--soft)}
+.gbest b{display:block;font-size:18px;color:var(--ink)}
+.spark{display:block;margin-top:2px}
+.install{margin-bottom:14px;display:flex;gap:12px;align-items:center;font-size:14px;line-height:1.35}
+.install .x{margin-left:auto;color:var(--soft);font-size:18px;padding:6px}
+.install .btn{width:auto;padding:10px 14px;font-size:15px}
+.foot{color:var(--soft);font-size:12px;text-align:center;margin-top:24px;line-height:1.5}
+
+/* oyun ekranı */
+.gtop{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.gtop .close{width:40px;height:40px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:18px}
+.gtop .gt{font-weight:700;font-size:17px}
+.gtop .gs{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;font-size:16px}
+.tbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:8px}
+.tbar i{display:block;height:100%;width:100%;background:var(--teal);border-radius:99px;transform-origin:left;transition:transform .1s linear}
+.tbar.hide{visibility:hidden}
+.stage{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;padding:8px 0 20px;user-select:none;-webkit-user-select:none}
+
+/* nasıl oynanır */
+.howto{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:14px}
+.howto .gico{width:84px;height:84px;border-radius:26px;margin:0 auto}
+.howto .gico svg{width:46px;height:46px}
+.howto h2{font-size:28px}
+.tag{display:inline-block;padding:4px 12px;border-radius:999px;font-size:13px;font-weight:700;color:#fff}
+.howto p{color:var(--soft);font-size:17px;line-height:1.5;max-width:360px;margin:0 auto}
+.howto p b{color:var(--ink)}
+.progress{font-size:14px;color:var(--soft);font-weight:600}
+.count{position:fixed;inset:0;display:grid;place-items:center;font-size:120px;font-weight:800;color:var(--coral);
+  background:color-mix(in srgb,var(--bg) 92%,transparent);z-index:10;animation:pop .55s ease-out}
+@keyframes pop{from{transform:scale(1.35);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Sıra Hafızası */
+.msg{text-align:center;font-size:22px;font-weight:700;min-height:30px;color:var(--soft)}
+.msg.go{color:var(--teal)}.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+.grid9{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:340px;margin:0 auto}
+.tile{aspect-ratio:1;border-radius:20px;background:var(--card);border:2px solid var(--line);box-shadow:0 4px 0 var(--line);
+  transition:background .12s,transform .12s}
+.tile.on{background:var(--coral);border-color:var(--coral);transform:scale(.95)}
+.tile.bad{background:var(--bad);border-color:var(--bad)}
+.tile.hint{border-color:var(--teal);border-width:4px}
+
+/* Renk Tuzağı */
+.rule{align-self:center;padding:8px 16px;border-radius:999px;color:#fff;font-weight:750;font-size:17px;background:var(--plum)}
+.rule.anlam{background:var(--teal)}
+.rule.flip{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.word{text-align:center;font-size:54px;font-weight:850;letter-spacing:.02em;min-height:72px}
+.word.pop{animation:pop .2s ease-out}
+.choices4{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice{padding:22px 8px;border-radius:18px;background:var(--card);border:2px solid var(--line);box-shadow:0 4px 0 var(--line);
+  font-size:19px;font-weight:750}
+.choice:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.fb{text-align:center;font-weight:700;min-height:24px}
+.fb.ok{color:var(--ok)}.fb.bad{color:var(--bad)}
+
+/* Hızlı Hesap */
+.q{text-align:center;font-size:56px;font-weight:850;font-variant-numeric:tabular-nums;min-height:76px}
+.q.pop{animation:pop .18s ease-out}
+.lvl{text-align:center;color:var(--soft);font-weight:600}
+
+/* Eşini Bul */
+.mem{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:380px;margin:0 auto}
+.c3{aspect-ratio:3/4;position:relative;transform-style:preserve-3d;transition:transform .32s;border-radius:14px}
+.c3.open,.c3.done{transform:rotateY(180deg)}
+.c3 .f,.c3 .b{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  display:grid;place-items:center}
+.c3 .b{background:var(--mustard);background-image:radial-gradient(rgba(255,255,255,.35) 2px,transparent 2.5px);
+  background-size:12px 12px;box-shadow:0 3px 0 #B98516}
+.c3 .f{background:var(--card);border:2px solid var(--line);transform:rotateY(180deg);font-size:34px}
+.c3.done .f{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--card))}
+
+/* sonuç */
+.result{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:16px}
+.result .big{font-size:84px;font-weight:850;line-height:1;font-variant-numeric:tabular-nums}
+.result .unit{color:var(--soft);font-size:16px;font-weight:600}
+.result .verdict{font-size:20px;font-weight:700;line-height:1.35}
+.result .detail{color:var(--soft);font-size:15px}
+.result .stats{display:flex;gap:10px;justify-content:center}
+.result .stats .card{padding:10px 16px;min-width:100px}
+.result .stats small{display:block;color:var(--soft);font-size:12px}
+.result .stats b{font-size:20px}
+.newbest{align-self:center;background:var(--mustard);color:#fff;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px}
+.sumlist{display:flex;flex-direction:column;gap:8px;text-align:left}
+.sumlist .card{display:flex;align-items:center;gap:12px;padding:12px 14px}
+.sumlist .gico{width:40px;height:40px;border-radius:12px}
+.sumlist .gico svg{width:22px;height:22px}
+.sumlist b{margin-left:auto;font-size:18px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+/* ---------- yardımcılar ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const app = $('#app');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rnd = n => Math.floor(Math.random() * n);
+const pick = a => a[rnd(a.length)];
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const dayKey = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const dayNum = (d = new Date()) => Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5);
+
+/* ---------- kayıt (telefonun içinde) ---------- */
+const KEY = 'zihinmolasi.v1';
+let S = { hist: [], daily: {}, sound: false, hideInstall: false };
+try { Object.assign(S, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+const histOf = id => S.hist.filter(h => h.g === id);
+const bestOf = id => { const h = histOf(id); return h.length ? Math.max(...h.map(x => x.s)) : null; };
+const playedDays = () => new Set(S.hist.map(h => h.d));
+function streak() {
+  const days = playedDays(); let n = 0; const d = new Date();
+  if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
+  while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+/* ---------- ses ve titreşim ---------- */
+let actx;
+function beep(f = 520, d = .08, type = 'sine', vol = .07) {
+  if (!S.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d + .02);
+  } catch (e) {}
+}
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+/* ---------- süre sayacı (uygulama arka plana gidince durur) ---------- */
+function makeTimer(total, onTick, onEnd) {
+  let left = total, last = performance.now(), dead = false;
+  const vis = () => { last = performance.now(); };
+  document.addEventListener('visibilitychange', vis);
+  const iv = setInterval(() => {
+    const now = performance.now();
+    if (!document.hidden) left -= now - last;
+    last = now;
+    if (left <= 0) { stop(); onTick(0); onEnd(); return; }
+    onTick(left);
+  }, 100);
+  function stop() { if (dead) return; dead = true; clearInterval(iv); document.removeEventListener('visibilitychange', vis); }
+  onTick(left);
+  return { stop };
+}
+
+/* ---------- simgeler ---------- */
+const ICON = {
+  sira: '<svg viewBox="0 0 24 24" fill="currentColor">' + [0,1,2,3,4,5,6,7,8].map(i =>
+    `<rect x="${2 + (i % 3) * 7}" y="${2 + Math.floor(i / 3) * 7}" width="6" height="6" rx="1.6" opacity="${[0,4,8,5].includes(i) ? 1 : .35}"/>`).join('') + '</svg>',
+  renk: '<svg viewBox="0 0 24 24"><text x="12" y="17.5" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor" font-family="system-ui,sans-serif">Aa</text></svg>',
+  es: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="9" height="13" rx="2" transform="rotate(-8 7.5 11.5)"/><rect x="12" y="5" width="9" height="13" rx="2" opacity=".55" transform="rotate(8 16.5 11.5)"/></svg>',
+  hesap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 3.5v7M3.5 7h7M14 7h6.5M15 15l5 5M20 15l-5 5M3.5 17.5h7"/></svg>',
+};
+
+/* ---------- oyunlar ---------- */
+const PRAISE = ['Harika!', 'Süper!', 'Tam isabet!', 'Beyin ısındı!', 'Aferin!', 'Çok iyi!'];
+
+const GAMES = {
+  sira: {
+    name: 'Sıra Hafızası', skill: 'Hafıza', color: '#F26B5B', unit: 'kare', timed: false,
+    howto: 'Kareler sırayla yanacak. <b>İzle</b>, sonra <b>aynı sırayla</b> dokun. Her doğru turda sıra bir kare uzar. <b>2 hata</b> hakkın var.',
+    start(stage, api) {
+      let alive = true, len = 3, best = 0, lives = 2, seq = [], idx = 0, accept = false;
+      stage.innerHTML = '<div class="msg">İzle…</div><div class="grid9">' +
+        Array.from({ length: 9 }, (_, i) => `<button class="tile" data-i="${i}" aria-label="Kare ${i + 1}"></button>`).join('') + '</div>';
+      const tiles = [...stage.querySelectorAll('.tile')], m = $('.msg', stage);
+      const stat = () => api.stat(`Sıra ${len} · ${'♥'.repeat(lives)}${'♡'.repeat(2 - lives)}`);
+      const say = (t, c = '') => { m.textContent = t; m.className = 'msg ' + c; };
+      async function light(i, ms, cls = 'on') { tiles[i].classList.add(cls); await sleep(ms); tiles[i].classList.remove(cls); }
+      async function round() {
+        if (!alive) return;
+        accept = false; idx = 0; seq = [];
+        for (let k = 0; k < len; k++) { let t; do t = rnd(9); while (k && t === seq[k - 1]); seq.push(t); }
+        stat(); say('İzle…'); await sleep(750);
+        const on = Math.max(380, 640 - len * 25);
+        for (const i of seq) { if (!alive) return; beep(330 + i * 55, on / 1000 * .8); await light(i, on); await sleep(170); }
+        if (!alive) return;
+        say('Sıra sende', 'go'); accept = true;
+      }
+      stage.querySelector('.grid9').addEventListener('pointerdown', async e => {
+        const b = e.target.closest('.tile'); if (!b || !accept) return;
+        const i = +b.dataset.i;
+        if (i === seq[idx]) {
+          idx++; beep(330 + i * 55, .08); light(i, 170);
+          if (idx === seq.length) {
+            accept = false; best = len; len++; say(pick(PRAISE), 'ok'); beep(880, .12);
+            await sleep(850); round();
+          }
+        } else {
+          accept = false; buzz(120); beep(150, .25, 'square'); lives--; stat();
+          light(i, 450, 'bad'); tiles[seq[idx]].classList.add('hint');
+          await sleep(900); tiles[seq[idx]].classList.remove('hint');
+          if (lives <= 0) { alive = false; api.end(best, best ? `${best} karelik sırayı aklında tuttun.` : 'Isınma turu sayalım.'); return; }
+          say('Olsun, yeni sıra geliyor', 'bad'); await sleep(900); round();
+        }
+      });
+      round();
+      return () => { alive = false; };
+    }
+  },
+
+  renk: {
+    name: 'Renk Tuzağı', skill: 'Dikkat', color: '#7B5EA7', unit: 'puan', timed: true, secs: 40,
+    howto: 'Bir renk adı çıkacak ama çoğu zaman <b>başka renkle</b> yazılmış olacak. Üstteki kural ne diyorsa ona dokun: yazının <b>RENGİ</b> mi, <b>ANLAMI</b> mı? Kural ara sıra değişir. 40 saniye.',
+    start(stage, api) {
+      const C = [{ n: 'KIRMIZI', c: '#E5484D' }, { n: 'MAVİ', c: '#3B82F6' }, { n: 'YEŞİL', c: '#22A05A' }, { n: 'MOR', c: '#9B59D0' }];
+      let score = 0, ok = 0, bad = 0, trial = 0, rule = 'renk', cur;
+      stage.innerHTML = '<div class="rule"></div><div class="word"></div><div class="choices4">' +
+        C.map((x, i) => `<button class="choice" data-i="${i}">${x.n}</button>`).join('') + '</div><div class="fb"></div>';
+      const R = $('.rule', stage), W = $('.word', stage), F = $('.fb', stage);
+      const stat = () => api.stat(`Puan ${score}`);
+      function next() {
+        trial++;
+        const flip = trial > 4 && Math.random() < .3;
+        if (flip) rule = rule === 'renk' ? 'anlam' : 'renk';
+        const w = rnd(4); let ink = rnd(4);
+        if (Math.random() < .78) while (ink === w) ink = rnd(4);
+        cur = { w, ink };
+        R.textContent = rule === 'renk' ? 'Yazının RENGİNE dokun' : 'Yazının ANLAMINA dokun';
+        R.className = 'rule ' + rule + (flip ? ' flip' : '');
+        W.textContent = C[w].n; W.style.color = C[ink].c;
+        W.classList.remove('pop'); void W.offsetWidth; W.classList.add('pop');
+      }
+      stage.querySelector('.choices4').addEventListener('pointerdown', e => {
+        const b = e.target.closest('.choice'); if (!b) return;
+        const ans = rule === 'renk' ? cur.ink : cur.w;
+        if (+b.dataset.i === ans) { score++; ok++; beep(700, .06); F.textContent = '✓'; F.className = 'fb ok'; }
+        else { score = Math.max(0, score - 1); bad++; buzz(80); beep(160, .18, 'square'); F.textContent = rule === 'renk' ? 'Rengine bak!' : 'Anlamına bak!'; F.className = 'fb bad'; }
+        stat(); next();
+      });
+      stat(); next();
+      const t = makeTimer(this.secs * 1000, l => api.time(l / (this.secs * 1000)), () => api.end(score, `${ok} doğru, ${bad} yanlış.`));
+      return () => t.stop();
+    }
+  },
+
+  es: {
+    name: 'Eşini Bul', skill: 'Görsel hafıza', color: '#E0A526', unit: 'puan', timed: false,
+    howto: 'Kartları ikişer ikişer aç ve eşlerini bul. Gördüğün kartların yerini aklında tut: <b>ne kadar az hamle</b> ve <b>ne kadar hızlı</b>, o kadar çok puan.',
+    start(stage, api) {
+      const sym = shuffle(['🍎', '🐟', '🌙', '⭐', '🌵', '🎈', '🍋', '🦋', '🍄', '🐢', '🌻', '☂️']).slice(0, 8);
+      const deck = shuffle([...sym, ...sym]);
+      let open = [], moves = 0, found = 0, lock = false, alive = true;
+      const t0 = performance.now();
+      stage.innerHTML = '<div class="mem">' + deck.map((s, i) =>
+        `<button class="c3" data-i="${i}" aria-label="Kart"><span class="b"></span><span class="f">${s}</span></button>`).join('') + '</div>';
+      const cards = [...stage.querySelectorAll('.c3')];
+      const secs = () => Math.round((performance.now() - t0) / 1000);
+      const stat = () => api.stat(`${moves} hamle · ${Math.floor(secs() / 60)}:${String(secs() % 60).padStart(2, '0')}`);
+      const iv = setInterval(() => alive && stat(), 500);
+      stage.querySelector('.mem').addEventListener('click', async e => {
+        const c = e.target.closest('.c3'); if (!c || lock || c.classList.contains('open') || c.classList.contains('done')) return;
+        c.classList.add('open'); beep(500, .05); open.push(c);
+        if (open.length < 2) return;
+        moves++; stat(); lock = true;
+        const [a, b] = open; open = [];
+        if (deck[a.dataset.i] === deck[b.dataset.i]) {
+          await sleep(250); a.classList.add('done'); b.classList.add('done'); beep(820, .1); found++; lock = false;
+          if (found === 8) {
+            alive = false; clearInterval(iv);
+            const s = secs(), score = Math.max(10, 200 - moves * 5 - s);
+            await sleep(500); api.end(score, `${moves} hamle, ${s} saniye.`);
+          }
+        } else {
+          await sleep(750); a.classList.remove('open'); b.classList.remove('open'); lock = false;
+        }
+      });
+      stat();
+      return () => { alive = false; clearInterval(iv); };
+    }
+  },
+
+  hesap: {
+    name: 'Hızlı Hesap', skill: 'Hız', color: '#2A9D8F', unit: 'doğru', timed: true, secs: 45,
+    howto: 'İşlemler gelecek, <b>doğru sonuca</b> dokun. Üst üste doğru yaptıkça sorular zorlaşır, yanlışta biraz kolaylaşır. 45 saniye.',
+    start(stage, api) {
+      let ok = 0, bad = 0, lvl = 1, top = 1, run = 0, ans;
+      stage.innerHTML = '<div class="lvl"></div><div class="q"></div><div class="choices4"></div><div class="fb"></div>';
+      const Q = $('.q', stage), B = $('.choices4', stage), F = $('.fb', stage), L = $('.lvl', stage);
+      const r = (a, b) => a + rnd(b - a + 1);
+      function gen() {
+        let a, b, op;
+        if (lvl === 1) { op = pick(['+', '−']); a = r(2, 9); b = r(1, 9); if (op === '−' && b > a) [a, b] = [b, a]; }
+        else if (lvl === 2) { op = pick(['+', '−', '×']); if (op === '×') { a = r(2, 9); b = r(2, 5); } else { a = r(8, 25); b = r(3, 9); if (op === '−' && b > a) [a, b] = [b, a]; } }
+        else if (lvl === 3) { op = pick(['+', '−', '×']); if (op === '×') { a = r(3, 9); b = r(3, 9); } else { a = r(15, 60); b = r(6, 39); if (op === '−' && b > a) [a, b] = [b, a]; } }
+        else { op = pick(['+', '−', '×', '×']); if (op === '×') { a = r(6, 12); b = r(4, 12); } else { a = r(35, 99); b = r(12, 59); if (op === '−' && b > a) [a, b] = [b, a]; } }
+        const v = op === '+' ? a + b : op === '−' ? a - b : a * b;
+        return { text: `${a} ${op} ${b}`, v };
+      }
+      function next() {
+        const q = gen(); ans = q.v;
+        const opts = new Set([ans]);
+        const cands = shuffle([ans + 1, ans - 1, ans + 2, ans - 2, ans + 10, ans - 10, +String(ans).split('').reverse().join('')]);
+        for (const c of cands) { if (opts.size >= 4) break; if (c >= 0 && c !== ans) opts.add(c); }
+        while (opts.size < 4) opts.add(ans + r(3, 15));
+        Q.textContent = q.text + ' = ?'; Q.classList.remove('pop'); void Q.offsetWidth; Q.classList.add('pop');
+        B.innerHTML = shuffle([...opts]).map(o => `<button class="choice" data-v="${o}">${o}</button>`).join('');
+        L.textContent = 'Seviye ' + lvl;
+      }
+      B.addEventListener('pointerdown', e => {
+        const b = e.target.closest('.choice'); if (!b) return;
+        if (+b.dataset.v === ans) { ok++; run++; beep(700, .06); F.textContent = '✓'; F.className = 'fb ok'; if (run >= 4 && lvl < 4) { lvl++; top = Math.max(top, lvl); run = 0; } }
+        else { bad++; run = 0; if (lvl > 1) lvl--; buzz(80); beep(160, .18, 'square'); F.textContent = 'Doğrusu ' + ans; F.className = 'fb bad'; }
+        api.stat(`Doğru ${ok}`); next();
+      });
+      api.stat('Doğru 0'); next();
+      const t = makeTimer(this.secs * 1000, l => api.time(l / (this.secs * 1000)), () => api.end(ok, `${ok} doğru, ${bad} yanlış, en yüksek seviye ${top}.`));
+      return () => t.stop();
+    }
+  },
+};
+const ORDER = ['sira', 'renk', 'es', 'hesap'];
+
+/* ---------- günün molası ---------- */
+function dailyGames() { const k = dayNum() % ORDER.length; return [0, 1, 2].map(i => ORDER[(k + i) % ORDER.length]); }
+const dailyDone = () => !!S.daily[dayKey()];
+const playedToday = id => S.hist.some(h => h.g === id && h.d === dayKey());
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 11) return ['Günaydın!', 'Çay demlenene kadar beyni de demleyelim.'];
+  if (h >= 11 && h < 14) return ['Öğle arası mı?', 'Yemekten önce beyne de bir şeyler yedirelim.'];
+  if (h >= 14 && h < 17) return ['Öğleden sonra rehaveti?', 'Üç küçük oyunla dağıtalım.'];
+  if (h >= 17 && h < 22) return ['Mesai bitti!', 'Beyin hâlâ ayakta mı? Bakalım.'];
+  return ['Gece kuşu musun?', 'Kısa bir tur atıp uyuyalım.'];
+}
+
+/* ---------- ekranlar ---------- */
+let cleanup = null;
+function stopGame() { if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; } }
+function go(html) { stopGame(); app.innerHTML = html; window.scrollTo(0, 0); }
+function enterSub() { if (!history.state || history.state.s !== 'sub') history.pushState({ s: 'sub' }, ''); }
+window.addEventListener('popstate', () => { renderHome(); });
+function backHome() { if (history.state && history.state.s === 'sub') history.back(); else renderHome(); }
+
+function spark(id) {
+  const v = histOf(id).slice(-7).map(h => h.s);
+  if (v.length < 2) return '';
+  const max = Math.max(...v), min = Math.min(...v), W = 60, H = 18;
+  const pts = v.map((s, i) => `${(i / (v.length - 1) * W).toFixed(1)},${(H - 2 - (max === min ? .5 : (s - min) / (max - min)) * (H - 4)).toFixed(1)}`).join(' ');
+  return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline points="${pts}" fill="none" stroke="${GAMES[id].color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; if ($('.home')) renderHome(); });
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+function installCard() {
+  if (isStandalone() || S.hideInstall) return '';
+  let body;
+  if (deferredPrompt) body = '<div><b>Telefona yükle</b><br>Ana ekranda uygulama gibi dursun.</div><button class="btn" id="inst" style="margin-left:auto">Yükle</button>';
+  else if (isIOS()) body = '<div><b>Ana ekrana ekle:</b> alttaki Paylaş <span aria-hidden="true">⬆︎</span> düğmesi → “Ana Ekrana Ekle”.</div>';
+  else body = '<div><b>Ana ekrana ekle:</b> Chrome’da sağ üstteki ⋮ menüsü → “Ana ekrana ekle” ya da “Uygulamayı yükle”.</div>';
+  return `<div class="card install">${body}<button class="x" id="hideInst" aria-label="Kapat">✕</button></div>`;
+}
+
+function renderHome() {
+  stopGame();
+  const [hi, sub] = greeting(), st = streak(), days = playedDays(), dg = dailyGames(), done = dailyDone();
+  const week = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 6 + i); return d; });
+  const DN = ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct'];
+  app.innerHTML = `
+  <div class="home">
+    <header class="top">
+      <div><div class="brand">Zihin Molası</div><h1>${hi}</h1><p class="sub">${sub}</p></div>
+      <button class="icon-btn" id="snd" aria-label="Ses">${S.sound ? '🔊' : '🔇'}</button>
+    </header>
+    ${installCard()}
+    <section class="card streak">
+      <div class="fire">${st ? '🔥' : '🌱'}</div>
+      <div><b>${st ? st + ' gün' : 'Yeni başlangıç'}</b><small>${st ? 'üst üste mola verdin' : 'Bugün ilk molanı ver'}</small></div>
+      <div class="week">${week.map(d => `<span class="${days.has(dayKey(d)) ? 'on' : ''} ${dayKey(d) === dayKey() ? 'today' : ''}"><i></i>${DN[d.getDay()]}</span>`).join('')}</div>
+    </section>
+    <section class="card daily">
+      <h2>${done ? 'Bugünkü mola tamam ✓' : 'Günün Molası'}</h2>
+      <p>${done ? 'Yarın yeni oyunlar seni bekliyor. İstersen yine oyna.' : '3 oyun · yaklaşık 4 dakika · her gün değişir'}</p>
+      <div class="chips">${dg.map(id => `<span class="chip ${playedToday(id) && done ? 'done' : ''}"><span class="dot" style="background:${GAMES[id].color}"></span>${GAMES[id].name}</span>`).join('')}</div>
+      <button class="btn" id="startDaily">${done ? 'Bir tur daha' : 'Molaya başla'}</button>
+    </section>
+    <h2 class="sec">Tek tek oyna</h2>
+    <div class="games">
+      ${ORDER.map(id => { const g = GAMES[id], b = bestOf(id); return `
+      <button class="card grow" data-g="${id}">
+        <span class="gico" style="background:${g.color}">${ICON[id]}</span>
+        <span class="ginfo"><b>${g.name}</b><small>${g.skill}</small></span>
+        <span class="gbest">${b == null ? 'Yeni' : `rekor<b>${b}</b>`}${spark(id)}</span>
+      </button>`; }).join('')}
+    </div>
+    <p class="foot">Zihin Molası eğlence için hazırlanmış kısa beyin egzersizleridir;<br>tıbbi bir tedavi yerine geçmez. · Prototip</p>
+  </div>`;
+  $('#snd').onclick = () => { S.sound = !S.sound; save(); if (S.sound) beep(660, .1); renderHome(); };
+  $('#startDaily').onclick = () => { enterSub(); playGame(dg[0], { daily: dg, i: 0 }); };
+  app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { enterSub(); playGame(b.dataset.g, null); });
+  const hide = $('#hideInst'); if (hide) hide.onclick = () => { S.hideInstall = true; save(); renderHome(); };
+  const inst = $('#inst'); if (inst) inst.onclick = async () => { deferredPrompt.prompt(); try { await deferredPrompt.userChoice; } catch (e) {} deferredPrompt = null; renderHome(); };
+}
+
+function playGame(id, ctx) {
+  const g = GAMES[id];
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button>${ctx ? `<span class="progress">Günün Molası · ${ctx.i + 1}/${ctx.daily.length}</span>` : ''}</div>
+  <div class="howto">
+    <span class="gico" style="background:${g.color}">${ICON[id]}</span>
+    <div><span class="tag" style="background:${g.color}">${g.skill}</span></div>
+    <h2>${g.name}</h2>
+    <p>${g.howto}</p>
+  </div>
+  <button class="btn" id="go">Başla</button>`);
+  $('#x').onclick = backHome;
+  $('#go').onclick = async () => {
+    if (g.timed) {
+      for (const n of [3, 2, 1]) { const c = document.createElement('div'); c.className = 'count'; c.textContent = n; document.body.appendChild(c); beep(440, .08); await sleep(600); c.remove(); }
+    }
+    runGame(id, ctx);
+  };
+}
+
+function runGame(id, ctx) {
+  const g = GAMES[id];
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">${g.name}</span><span class="gs" id="gs"></span></div>
+  <div class="tbar ${g.timed ? '' : 'hide'}"><i id="tb"></i></div>
+  <div class="stage" id="stage"></div>`);
+  $('#x').onclick = backHome;
+  const gs = $('#gs'), tb = $('#tb');
+  let ended = false;
+  const api = {
+    stat: t => { gs.textContent = t; },
+    time: f => { tb.style.transform = `scaleX(${f})`; tb.style.background = f < .2 ? 'var(--bad)' : 'var(--teal)'; },
+    end: (score, detail) => { if (ended) return; ended = true; stopGame(); showResult(id, score, detail, ctx); },
+  };
+  cleanup = g.start($('#stage'), api) || null;
+}
+
+function showResult(id, score, detail, ctx) {
+  const g = GAMES[id], prevH = histOf(id), prev = prevH.length ? prevH[prevH.length - 1].s : null, best = bestOf(id);
+  const isBest = best != null && score > best;
+  S.hist.push({ g: id, s: score, d: dayKey(), t: Date.now() });
+  if (S.hist.length > 2000) S.hist = S.hist.slice(-2000);
+  const last = ctx && ctx.i === ctx.daily.length - 1;
+  if (last) S.daily[dayKey()] = true;
+  save();
+  let verdict;
+  if (prev == null) verdict = 'İlk skorun kaydedildi. Bundan sonra rakibin sensin.';
+  else if (isBest) verdict = 'Yeni rekor! Bugün beyin formda.';
+  else if (score > prev) verdict = `Geçen seferden ${score - prev} ${g.unit} daha iyi.`;
+  else if (score === prev) verdict = 'Geçen seferle aynı. İstikrar da başarıdır.';
+  else verdict = 'Geçen seferin biraz altında. Her gün aynı olmaz, yarın yine dene.';
+  if (score > 0) buzz([30, 40, 30]);
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button>${ctx ? `<span class="progress">Günün Molası · ${ctx.i + 1}/${ctx.daily.length}</span>` : `<span class="gt">${g.name}</span>`}</div>
+  <div class="result">
+    ${isBest ? '<span class="newbest">YENİ REKOR</span>' : ''}
+    <div><div class="big" style="color:${g.color}">${score}</div><div class="unit">${g.unit}</div></div>
+    <p class="verdict">${verdict}</p>
+    <p class="detail">${detail}</p>
+    <div class="stats">
+      <div class="card"><small>Önceki</small><b>${prev == null ? '–' : prev}</b></div>
+      <div class="card"><small>Rekor</small><b>${Math.max(score, best ?? 0)}</b></div>
+    </div>
+  </div>
+  ${ctx && !last ? `<button class="btn" id="next">Sıradaki: ${GAMES[ctx.daily[ctx.i + 1]].name}</button>`
+    : ctx ? '<button class="btn" id="fin">Molayı bitir</button>'
+    : '<button class="btn" id="again">Tekrar oyna</button><button class="link" id="home">Ana sayfa</button>'}`);
+  $('#x').onclick = backHome;
+  const n = $('#next'); if (n) n.onclick = () => playGame(ctx.daily[ctx.i + 1], { daily: ctx.daily, i: ctx.i + 1 });
+  const f = $('#fin'); if (f) f.onclick = () => dailySummary(ctx.daily);
+  const a = $('#again'); if (a) a.onclick = () => playGame(id, null);
+  const h = $('#home'); if (h) h.onclick = backHome;
+}
+
+function dailySummary(ids) {
+  const st = streak();
+  const lines = ['Beyin ısındı. Şimdi o evrak yığınına meydan okuyabilirsin.', 'Mola bitti, çay soğumadan masaya dön.', 'Bugünkü jimnastik tamam. Yarın aynı saatte?', 'Zihin tazelendi. Toplantıda ilk soruyu sen sor!'];
+  go(`
+  <div class="result">
+    <div style="font-size:64px">☕</div>
+    <h2 style="font-size:30px">Mola tamam!</h2>
+    <p class="verdict">${pick(lines)}</p>
+    <p class="detail">${st} gün üst üste 🔥</p>
+    <div class="sumlist">${ids.map(id => { const h = histOf(id).filter(x => x.d === dayKey()).pop(); return `
+      <div class="card"><span class="gico" style="background:${GAMES[id].color}">${ICON[id]}</span><span>${GAMES[id].name}</span><b>${h ? h.s : '–'} <small style="color:var(--soft);font-weight:500">${GAMES[id].unit}</small></b></div>`; }).join('')}
+    </div>
+  </div>
+  <button class="btn" id="home">Ana sayfa</button>`);
+  $('#home').onclick = backHome;
+}
+
+renderHome();
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
