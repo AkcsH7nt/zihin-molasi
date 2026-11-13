@@ -11,12 +11,14 @@
   // Seri: bugün oynanmadıysa dünden sayılır. 7 günlük pencerede 1 boş gün affedilir (sayıya eklenmez).
   function streak(days, today = new Date()) {
     const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
+    const playedToday = days.has(dayKey(d));
+    if (!playedToday) d.setDate(d.getDate() - 1);
     let n = 0, shielded = false, lastGap = null, i = 0;
     for (; ; i++) {
       if (days.has(dayKey(d))) { n++; }
       else {
-        if (n === 0) break;
+        // seri henüz başlamadıysa yalnız "dün" boşluğu affedilebilir (bugün daha bitmedi)
+        if (n === 0 && !(i === 0 && !playedToday)) break;
         if (lastGap !== null && i - lastGap < 7) break;
         // boşluğun ötesinde oynanmış gün yoksa affetmeye gerek yok
         const prev = new Date(d); prev.setDate(prev.getDate() - 1);

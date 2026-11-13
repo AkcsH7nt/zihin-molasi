@@ -404,7 +404,7 @@ const GAMES = {
   hesap: {
     name: 'Hızlı Hesap', skill: 'Hız', color: '#2A9D8F', unit: 'doğru', timed: true, secs: 45,
     howto: 'İşlemler gelecek, <b>doğru sonuca</b> dokun. Üst üste doğru yaptıkça sorular zorlaşır, yanlışta biraz kolaylaşır. 45 saniye.',
-    bilim: 'Zihinden hızlı işlem, işlem hızını ve çalışma belleğini birlikte zorlar. Zorluk sana göre ayarlanır; zorlayıcı olan iş yarar (Park ve ark., 2014).',
+    bilim: 'Zihinden hızlı işlem, işlem hızını ve çalışma belleğini birlikte zorlar. Zorluk sana göre ayarlanır: çok kolay olan sıkar, biraz zorlayan ilgi çeker.',
     start(stage, api) {
       let ok = 0, bad = 0, lvl = ZM.startLevel(S.lvl.hesap, 1, 4), top = lvl, run = 0, ans;
       stage.innerHTML = '<div class="lvl"></div><div class="q"></div><div class="choices4"></div><div class="fb"></div>';
@@ -488,7 +488,7 @@ const GAMES = {
           await sleep(1600);
         }
         if (!alive) return;
-        alive = false; S.lvl.iki = n; // kazanılan seviye; sonraki oyun bir tık altından başlar
+        alive = false; S.lvl.iki = top; // oynanan en yüksek seviye; sonraki oyun bir tık altından başlar
         api.end(Math.max(0, score), `${hits} eşleşme yakaladın, ${fas} yanlış basış. En yüksek: ${top} önce.`);
       }
       run();
@@ -648,7 +648,8 @@ function greeting() {
 /* ---------- ekranlar ---------- */
 let cleanup = null;
 function stopGame() { if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; } }
-function go(html) { stopGame(); app.innerHTML = html; window.scrollTo(0, 0); }
+let navId = 0; // her ekran değişiminde artar; eski ekrandan gelen geç olaylar yok sayılır
+function go(html) { stopGame(); navId++; app.innerHTML = html; window.scrollTo(0, 0); }
 function enterSub() { if (!history.state || history.state.s !== 'sub') history.pushState({ s: 'sub' }, ''); }
 window.addEventListener('popstate', () => { renderHome(); });
 function backHome() { if (history.state && history.state.s === 'sub') history.back(); else renderHome(); }
@@ -676,7 +677,7 @@ function installCard() {
 }
 
 function renderHome() {
-  stopGame();
+  stopGame(); navId++;
   const [hi, sub] = greeting(), si = streakInfo(), st = si.n, days = playedDays(), dg = dailyGames(), done = dailyDone();
   const week = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 6 + i); return d; });
   const DN = ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct'];
@@ -741,9 +742,14 @@ function playGame(id, ctx) {
   $('#x').onclick = backHome;
   const dr = $('#ders'); if (dr) dr.onclick = () => sarayDers(() => playGame('saray', ctx));
   $('#go').onclick = async () => {
+    const my = navId; $('#go').disabled = true;
     if (g.timed) {
-      for (const n of [3, 2, 1]) { const c = document.createElement('div'); c.className = 'count'; c.textContent = n; document.body.appendChild(c); beep(440, .08); await sleep(600); c.remove(); }
+      for (const n of [3, 2, 1]) {
+        if (navId !== my) return;
+        const c = document.createElement('div'); c.className = 'count'; c.textContent = n; document.body.appendChild(c); beep(440, .08); await sleep(600); c.remove();
+      }
     }
+    if (navId !== my) return; // geri sayım sırasında çıkıldı
     runGame(id, ctx);
   };
 }
@@ -757,10 +763,11 @@ function runGame(id, ctx) {
   $('#x').onclick = backHome;
   const gs = $('#gs'), tb = $('#tb');
   let ended = false;
+  const my = navId;
   const api = {
     stat: t => { gs.textContent = t; },
     time: f => { tb.style.transform = `scaleX(${f})`; tb.style.background = f < .2 ? 'var(--bad)' : 'var(--teal)'; },
-    end: (score, detail) => { if (ended) return; ended = true; stopGame(); showResult(id, score, detail, ctx); },
+    end: (score, detail) => { if (ended || navId !== my) return; ended = true; stopGame(); showResult(id, score, detail, ctx); },
   };
   cleanup = g.start($('#stage'), api) || null;
 }
@@ -771,7 +778,7 @@ function showResult(id, score, detail, ctx) {
   S.hist.push({ g: id, s: score, d: dayKey(), t: Date.now() });
   if (S.hist.length > 2000) S.hist = S.hist.slice(-2000);
   const last = ctx && ctx.i === ctx.daily.length - 1;
-  if (last) S.daily[dayKey()] = true;
+  if (last) S.daily[ctx.k || dayKey()] = true;
   save();
   let verdict;
   if (prev == null) verdict = 'İlk skorun kaydedildi. Bundan sonra rakibin sensin.';
@@ -796,29 +803,29 @@ function showResult(id, score, detail, ctx) {
     : ctx ? '<button class="btn" id="fin">Molayı bitir</button>'
     : '<button class="btn" id="again">Tekrar oyna</button><button class="link" id="home">Ana sayfa</button>'}`);
   $('#x').onclick = backHome;
-  const n = $('#next'); if (n) n.onclick = () => playGame(ctx.daily[ctx.i + 1], { daily: ctx.daily, i: ctx.i + 1 });
+  const n = $('#next'); if (n) n.onclick = () => playGame(ctx.daily[ctx.i + 1], { ...ctx, i: ctx.i + 1 });
   const f = $('#fin'); if (f) f.onclick = () => {
-    const w = S.words[dayKey()];
-    if (w && w.now === undefined) recallScreen(dayKey(), 'now', ctx, () => dailySummary(ctx.daily));
-    else dailySummary(ctx.daily);
+    const k = ctx.k || dayKey(), w = S.words[k];
+    if (w && w.now === undefined) recallScreen(k, 'now', ctx, () => dailySummary(ctx.daily, k));
+    else dailySummary(ctx.daily, k);
   };
   const a = $('#again'); if (a) a.onclick = () => playGame(id, null);
   const h = $('#home'); if (h) h.onclick = backHome;
 }
 
-function dailySummary(ids) {
+function dailySummary(ids, k = dayKey()) {
   const st = streak();
-  const lines = ['Beyin ısındı. Şimdi o evrak yığınına meydan okuyabilirsin.', 'Mola bitti, çay soğumadan masaya dön.', 'Bugünkü jimnastik tamam. Yarın aynı saatte?', 'Zihin tazelendi. Toplantıda ilk soruyu sen sor!'];
+  const lines = ['Beyin ısındı, mola tamam. Yarın yeni oyunlar var!', 'Mola bitti, çay soğumadan masaya dön.', 'Bugünkü jimnastik tamam. Yarın aynı saatte?', 'Güzel mola oldu. Şimdi bir bardak su iç, gözlerini dinlendir.'];
   go(`
   <div class="result">
     <div style="font-size:64px">☕</div>
     <h2 style="font-size:30px">Mola tamam!</h2>
     <p class="verdict">${pick(lines)}</p>
     <p class="detail">${st} gün üst üste 🔥</p>
-    <div class="sumlist">${ids.map(id => { const h = histOf(id).filter(x => x.d === dayKey()).pop(); return `
+    <div class="sumlist">${ids.map(id => { const h = histOf(id).pop(); return `
       <div class="card"><span class="gico" style="background:${GAMES[id].color}">${ICON[id]}</span><span>${GAMES[id].name}</span><b>${h ? h.s : '–'} <small style="color:var(--soft);font-weight:500">${GAMES[id].unit}</small></b></div>`; }).join('')}
-      ${S.words[dayKey()] && S.words[dayKey()].now !== undefined ? `
-      <div class="card"><span class="gico" style="background:${WORD_COLOR}">${ICON.kelime}</span><span>Günün Kelimeleri</span><b>${S.words[dayKey()].now}/6</b></div>` : ''}
+      ${S.words[k] && S.words[k].now !== undefined ? `
+      <div class="card"><span class="gico" style="background:${WORD_COLOR}">${ICON.kelime}</span><span>Günün Kelimeleri</span><b>${S.words[k].now}/6</b></div>` : ''}
     </div>
   </div>
   <button class="btn" id="home">Ana sayfa</button>`);
@@ -854,7 +861,7 @@ function recentWords() {
 }
 
 function startDaily(dg) {
-  const ctx = { daily: dg, i: 0 };
+  const ctx = { daily: dg, i: 0, k: dayKey() }; // mola başladığı günün anahtarı (gece yarısını geçse de)
   if (dailyDone()) return playGame(dg[0], ctx); // bugünkü mola bitti; "bir tur daha" yalnız oyun
   const y = ZM.pendingRecall(S.words, new Date());
   if (y) return recallScreen(y, 'next', ctx, () => studyWords(ctx));
@@ -862,7 +869,7 @@ function startDaily(dg) {
 }
 
 function studyWords(ctx) {
-  const k = dayKey();
+  const k = ctx.k;
   if (S.words[k]) return playGame(ctx.daily[0], ctx); // bugün zaten çalışıldı
   const w = ZM.pickWords(ZM.KELIMELER, 6, Math.random, recentWords());
   S.words[k] = { w }; save();

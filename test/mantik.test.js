@@ -146,3 +146,11 @@ test('Hafıza Sarayı: en büyük seviyeye yetecek kadar yer var', () => {
   assert.ok(ZM.YERLER.length >= ZM.palaceSize(7));
   assert.equal(ZM.YERLER[0], 'Bina kapısı');
 });
+
+test('streak: dün boşsa ve bugün henüz oynanmadıysa seri bekler (affedilir)', () => {
+  assert.deepEqual(ZM.streak(new Set([gun(2), gun(3)]), T), { n: 2, shielded: true });
+});
+
+test('streak: dün ve önceki gün boşsa seri biter', () => {
+  assert.deepEqual(ZM.streak(new Set([gun(3), gun(4)]), T), { n: 0, shielded: false });
+});
