@@ -1,6 +1,6 @@
 // Zihin Molası — çevrimdışı çalışma. Dosya değişince SURUM'u artır.
 const SURUM = 'zm-2';
-const DOSYALAR = ['./', 'index.html', 'mantik.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+const DOSYALAR = ['./', 'index.html', 'mantik.js', 'kelimeler.js','manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SURUM).then(c => c.addAll(DOSYALAR)).then(() => self.skipWaiting()));

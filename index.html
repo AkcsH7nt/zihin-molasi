@@ -163,6 +163,18 @@ h1,h2,h3,p{margin:0}
 .goz .per.wrong{border:3px solid var(--bad)}
 .goz-ans{min-height:150px}
 
+/* Günün Kelimeleri */
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
+.wgrid.pick{grid-template-columns:1fr 1fr 1fr;gap:8px}
+.wcard{padding:16px 6px;border-radius:16px;background:var(--card);border:2px solid var(--line);font-size:19px;font-weight:750;
+  box-shadow:0 3px 0 var(--line)}
+.pick .wcard{padding:14px 4px;font-size:15px}
+.wcard.sel{background:#5C8A3A;border-color:#5C8A3A;color:#fff}
+.wcard.hit{background:var(--ok);border-color:var(--ok);color:#fff}
+.wcard.fa{background:var(--bad);border-color:var(--bad);color:#fff;text-decoration:line-through}
+.wcard.miss{border-color:var(--mustard);border-style:dashed;color:var(--mustard)}
+.wcard.dim{opacity:.4}
+
 /* sonuç */
 .result{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:16px}
 .result .big{font-size:84px;font-weight:850;line-height:1;font-variant-numeric:tabular-nums}
@@ -184,6 +196,7 @@ h1,h2,h3,p{margin:0}
 <body>
 <div id="app"></div>
 <script src="mantik.js"></script>
+<script src="kelimeler.js"></script>
 <script>
 'use strict';
 /* ---------- yardımcılar ---------- */
@@ -245,6 +258,7 @@ const ICON = {
   es: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="9" height="13" rx="2" transform="rotate(-8 7.5 11.5)"/><rect x="12" y="5" width="9" height="13" rx="2" opacity=".55" transform="rotate(8 16.5 11.5)"/></svg>',
   iki: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6 5 12l6 6M19 6l-6 6 6 6"/></svg>',
   goz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>',
+  kelime: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/></svg>',
   hesap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 3.5v7M3.5 7h7M14 7h6.5M15 15l5 5M20 15l-5 5M3.5 17.5h7"/></svg>',
 };
 
@@ -582,7 +596,7 @@ function renderHome() {
     </section>
     <section class="card daily">
       <h2>${done ? 'Bugünkü mola tamam ✓' : 'Günün Molası'}</h2>
-      <p>${done ? 'Yarın yeni oyunlar seni bekliyor. İstersen yine oyna.' : '3 oyun · yaklaşık 4 dakika · her gün değişir'}</p>
+      <p>${done ? 'Yarın yeni oyunlar seni bekliyor. İstersen yine oyna.' : '6 kelime + 3 oyun · yaklaşık 5 dakika · her gün değişir'}</p>
       <div class="chips">${dg.map(id => `<span class="chip ${playedToday(id) && done ? 'done' : ''}"><span class="dot" style="background:${GAMES[id].color}"></span>${GAMES[id].name}</span>`).join('')}</div>
       <button class="btn" id="startDaily">${done ? 'Bir tur daha' : 'Molaya başla'}</button>
     </section>
@@ -598,7 +612,7 @@ function renderHome() {
     <p class="foot">Zihin Molası eğlence için hazırlanmış kısa beyin egzersizleridir;<br>tıbbi bir tedavi yerine geçmez. · Prototip</p>
   </div>`;
   $('#snd').onclick = () => { S.sound = !S.sound; save(); if (S.sound) beep(660, .1); renderHome(); };
-  $('#startDaily').onclick = () => { enterSub(); playGame(dg[0], { daily: dg, i: 0 }); };
+  $('#startDaily').onclick = () => { enterSub(); startDaily(dg); };
   app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { enterSub(); playGame(b.dataset.g, null); });
   const hide = $('#hideInst'); if (hide) hide.onclick = () => { S.hideInstall = true; save(); renderHome(); };
   const inst = $('#inst'); if (inst) inst.onclick = async () => { deferredPrompt.prompt(); try { await deferredPrompt.userChoice; } catch (e) {} deferredPrompt = null; renderHome(); };
@@ -673,7 +687,11 @@ function showResult(id, score, detail, ctx) {
     : '<button class="btn" id="again">Tekrar oyna</button><button class="link" id="home">Ana sayfa</button>'}`);
   $('#x').onclick = backHome;
   const n = $('#next'); if (n) n.onclick = () => playGame(ctx.daily[ctx.i + 1], { daily: ctx.daily, i: ctx.i + 1 });
-  const f = $('#fin'); if (f) f.onclick = () => dailySummary(ctx.daily);
+  const f = $('#fin'); if (f) f.onclick = () => {
+    const w = S.words[dayKey()];
+    if (w && w.now === undefined) recallScreen(dayKey(), 'now', ctx, () => dailySummary(ctx.daily));
+    else dailySummary(ctx.daily);
+  };
   const a = $('#again'); if (a) a.onclick = () => playGame(id, null);
   const h = $('#home'); if (h) h.onclick = backHome;
 }
@@ -689,10 +707,94 @@ function dailySummary(ids) {
     <p class="detail">${st} gün üst üste 🔥</p>
     <div class="sumlist">${ids.map(id => { const h = histOf(id).filter(x => x.d === dayKey()).pop(); return `
       <div class="card"><span class="gico" style="background:${GAMES[id].color}">${ICON[id]}</span><span>${GAMES[id].name}</span><b>${h ? h.s : '–'} <small style="color:var(--soft);font-weight:500">${GAMES[id].unit}</small></b></div>`; }).join('')}
+      ${S.words[dayKey()] && S.words[dayKey()].now !== undefined ? `
+      <div class="card"><span class="gico" style="background:${WORD_COLOR}">${ICON.kelime}</span><span>Günün Kelimeleri</span><b>${S.words[dayKey()].now}/6</b></div>` : ''}
     </div>
   </div>
   <button class="btn" id="home">Ana sayfa</button>`);
   $('#home').onclick = backHome;
+}
+
+/* ---------- Günün Kelimeleri ---------- */
+const WORD_COLOR = '#5C8A3A';
+function recentWords() {
+  const s = new Set();
+  for (let i = 0; i < 3; i++) { const d = new Date(); d.setDate(d.getDate() - i); const r = S.words[dayKey(d)]; if (r) r.w.forEach(w => s.add(w)); }
+  return s;
+}
+
+function startDaily(dg) {
+  const ctx = { daily: dg, i: 0 };
+  if (dailyDone()) return playGame(dg[0], ctx); // bugünkü mola bitti; "bir tur daha" yalnız oyun
+  const y = ZM.pendingRecall(S.words, new Date());
+  if (y) return recallScreen(y, 'next', ctx, () => studyWords(ctx));
+  studyWords(ctx);
+}
+
+function studyWords(ctx) {
+  const k = dayKey();
+  if (S.words[k]) return playGame(ctx.daily[0], ctx); // bugün zaten çalışıldı
+  const w = ZM.pickWords(ZM.KELIMELER, 6, Math.random, recentWords());
+  S.words[k] = { w }; save();
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="progress">Günün Molası · Kelimeler</span></div>
+  <div class="tbar"><i id="tb"></i></div>
+  <div class="howto" style="gap:18px">
+    <h2>Günün Kelimeleri</h2>
+    <p>Bu 6 kelimeyi aklında tut. İpucu: hepsini <b>tek bir saçma hikâyede</b> birleştir. Molanın sonunda soracağız, yarın da bir daha!</p>
+    <div class="wgrid">${w.map(x => `<div class="wcard">${x}</div>`).join('')}</div>
+  </div>
+  <button class="btn" id="ready">Hazırım</button>`);
+  $('#x').onclick = backHome;
+  const tb = $('#tb');
+  const t = makeTimer(20000, l => { tb.style.transform = `scaleX(${l / 20000})`; }, () => playGame(ctx.daily[0], ctx));
+  cleanup = () => t.stop();
+  $('#ready').onclick = () => playGame(ctx.daily[0], ctx);
+}
+
+function recallScreen(k, mode, ctx, next) {
+  const targets = S.words[k].w;
+  const others = ZM.pickWords(ZM.KELIMELER, 6, Math.random, new Set([...recentWords(), ...targets]));
+  const tiles = shuffle([...targets, ...others]);
+  const title = mode === 'next' ? 'Dünün Kelimeleri' : 'Kelimeler geri dönüyor!';
+  const sub = mode === 'next' ? 'Dün aklında tuttuğun 6 kelime vardı. Bakalım bir gece uykudan sonra neler kalmış?' : 'Molanın başında gördüğün 6 kelimeyi seç.';
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="progress">Günün Molası · Hatırlama</span><span class="gs" id="cnt">0/6</span></div>
+  <div class="howto" style="gap:14px">
+    <h2>${title}</h2>
+    <p>${sub}</p>
+    <div class="wgrid pick">${tiles.map(x => `<button class="wcard" data-w="${x}">${x}</button>`).join('')}</div>
+    <p class="fb" id="rmsg"></p>
+  </div>
+  <button class="btn" id="check">Kontrol et</button>`);
+  $('#x').onclick = backHome;
+  const chosen = new Set(), cnt = $('#cnt'), msg = $('#rmsg');
+  let checked = false;
+  $('.wgrid', app).addEventListener('click', e => {
+    const b = e.target.closest('.wcard'); if (!b || checked) return;
+    const w = b.dataset.w;
+    if (chosen.has(w)) { chosen.delete(w); b.classList.remove('sel'); }
+    else if (chosen.size >= 6) { msg.textContent = 'En fazla 6 kelime seçebilirsin'; msg.className = 'fb bad'; return; }
+    else { chosen.add(w); b.classList.add('sel'); beep(520, .04); }
+    msg.textContent = ''; cnt.textContent = `${chosen.size}/6`;
+  });
+  $('#check').onclick = () => {
+    if (checked) return next();
+    checked = true;
+    const sc = ZM.recallScore([...chosen], targets);
+    S.words[k][mode] = sc;
+    if (mode === 'now') S.hist.push({ g: 'kelime', s: sc, d: dayKey(), t: Date.now() });
+    save();
+    app.querySelectorAll('.wgrid .wcard').forEach(b => {
+      const w = b.dataset.w, t = targets.includes(w), c = chosen.has(w);
+      b.classList.add(t && c ? 'hit' : c ? 'fa' : t ? 'miss' : 'dim');
+    });
+    msg.className = 'fb ' + (sc >= 4 ? 'ok' : 'bad');
+    msg.innerHTML = (sc === 6 ? '6/6! Hafızan bugün jilet gibi.' : sc >= 4 ? `${sc}/6, çok iyi.` : `${sc}/6. Hikâye kurmayı dene, fark edeceksin.`) +
+      '<br><small style="color:var(--soft);font-weight:500">yeşil: doğru · kırmızı: yanlış seçim · sarı: kaçan</small>';
+    $('#check').textContent = 'Devam';
+    if (sc >= 4) buzz([30, 40, 30]);
+  };
 }
 
 renderHome();

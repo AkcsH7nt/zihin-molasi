@@ -65,7 +65,25 @@
   }
   const gozScore = trials => trials.reduce((t, x) => t + (x.ok ? Math.max(1, Math.round((600 - x.ms) / 10)) : 0), 0);
 
-  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, startLevel, nbackSeq, nbackTargets, nbackAdapt, gozAdapt, gozScore };
+  // Günün Kelimeleri
+  function pickWords(pool, n, rng = Math.random, exclude = new Set()) {
+    const a = pool.filter(w => !exclude.has(w));
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a.slice(0, n);
+  }
+  function recallScore(chosen, targets) {
+    const t = new Set(targets);
+    let s = 0;
+    for (const c of chosen.slice(0, 6)) s += t.has(c) ? 1 : -1;
+    return Math.max(0, s);
+  }
+  function pendingRecall(words, today = new Date()) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1), k = dayKey(d);
+    const r = words && words[k];
+    return r && Array.isArray(r.w) && r.next === undefined ? k : null;
+  }
+
+  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, startLevel, nbackSeq, nbackTargets, nbackAdapt, gozAdapt, gozScore, pickWords, recallScore, pendingRecall };
   g.ZM = Object.assign(g.ZM || {}, ZM);
   if (typeof module !== 'undefined' && module.exports) module.exports = g.ZM;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

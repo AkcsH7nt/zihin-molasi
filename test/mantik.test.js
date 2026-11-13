@@ -104,3 +104,34 @@ test('gozScore: yalnız doğrular puan alır, kısa süre daha çok', () => {
   assert.equal(ZM.gozScore([{ ok: true, ms: 600 }]), 1);
   assert.equal(ZM.gozScore([]), 0);
 });
+
+const HAVUZ = Array.from({ length: 30 }, (_, i) => 'k' + i);
+
+test('pickWords: istenen sayıda tekrarsız kelime, dışlananlar hariç', () => {
+  const ex = new Set(HAVUZ.slice(0, 20));
+  const w = ZM.pickWords(HAVUZ, 6, Math.random, ex);
+  assert.equal(w.length, 6);
+  assert.equal(new Set(w).size, 6);
+  assert.ok(w.every(x => !ex.has(x) && HAVUZ.includes(x)));
+});
+
+test('recallScore: isabet eksi yanlış, en az 0', () => {
+  assert.equal(ZM.recallScore(['a', 'b', 'x'], ['a', 'b', 'c']), 1);
+  assert.equal(ZM.recallScore([], ['a', 'b', 'c']), 0);
+  assert.equal(ZM.recallScore(['x', 'y'], ['a']), 0);
+});
+
+test('recallScore: 6\'dan fazla seçim ilk 6 ile sınırlanır', () => {
+  const t = ['a', 'b', 'c', 'd', 'e', 'f'];
+  assert.equal(ZM.recallScore(['x', 'y', 'a', 'b', 'c', 'd', 'e', 'f'], t), 2);
+});
+
+test('pendingRecall: dünün kelimeleri sorulmadıysa dünün anahtarı', () => {
+  assert.equal(ZM.pendingRecall({ '2026-11-12': { w: ['a'] } }, T), '2026-11-12');
+});
+
+test('pendingRecall: dün zaten sorulduysa ya da kayıt yoksa null', () => {
+  assert.equal(ZM.pendingRecall({ '2026-11-12': { w: ['a'], next: 3 } }, T), null);
+  assert.equal(ZM.pendingRecall({ '2026-11-10': { w: ['a'] } }, T), null);
+  assert.equal(ZM.pendingRecall({}, T), null);
+});
