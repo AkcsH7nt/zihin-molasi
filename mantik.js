@@ -130,6 +130,17 @@
       case 'iki': return { n: [1, 1, 2, 2, 2, 3, 3, 3, 4, 4][t], scored: 10 + s * 2, showMs: Math.max(1100, 1800 - t * 70) };
       case 'goz': return { ms: Math.max(60, 400 - t * 36 - s * 2), trials: 6 + Math.floor(s / 2), positions: t < 4 ? 8 : 12, animals: t < 6 ? 4 : 6 };
       case 'saray': return { size: Math.min(16, 4 + t + Math.floor(s / 5)), studyMs: Math.max(3000, 6000 - t * 100 - s * 150) };
+      case 'sudoku': return k < 20 ? { size: 4, blanks: 4 + Math.floor(k / 3), maxMistakes: 3 }
+        : k < 50 ? { size: 6, blanks: 10 + Math.floor((k - 20) / 2), maxMistakes: 3 }
+          : { size: 9, blanks: 30 + Math.floor((k - 50) / 2.5), maxMistakes: 3 };
+      case 'kelime': {
+        const n = [6, 6, 7, 7, 8, 8, 9, 9, 10, 10][t], words = Math.min(10, 3 + Math.floor(s / 2) + Math.floor(t / 3));
+        return { n, words, dirs: t < 3 ? 2 : t < 6 ? 3 : t < 8 ? 4 : 8, time: words * 25 + n * 5 };
+      }
+      case 'yapboz': {
+        const [cols, rows] = [[2, 3], [3, 3], [3, 4], [4, 4], [4, 5], [5, 5], [5, 6], [6, 6], [6, 7], [7, 7]][t], N = cols * rows;
+        return { cols, rows, maxMoves: Math.ceil(N * (2.6 - 0.06 * s)) };
+      }
     }
     return null;
   }
@@ -147,6 +158,9 @@
       case 'iki': return oran(o.acc, 0.7, 0.85, 0.95);
       case 'goz': return oran(o.acc, 0.6, 0.75, 0.9);
       case 'saray': return oran(o.acc, 0.7, 0.85, 1);
+      case 'sudoku': return !o.done || o.mistakes > P.maxMistakes ? 0 : o.mistakes === 0 ? 3 : o.mistakes === 1 ? 2 : 1;
+      case 'kelime': return !o.done ? 0 : o.left >= 0.5 ? 3 : o.left >= 0.25 ? 2 : 1;
+      case 'yapboz': { const N = P.cols * P.rows; return !o.done || o.moves > P.maxMoves ? 0 : o.moves <= Math.ceil(N * 1.2) ? 3 : o.moves <= Math.ceil(N * 1.7) ? 2 : 1; }
     }
     return 0;
   }
@@ -184,6 +198,119 @@
 
   const esCols = cards => (cards <= 6 ? 3 : cards <= 16 ? 4 : cards <= 30 ? 5 : 6);
 
+  // ---------- Bulmacalar ----------
+  // Tohumlu rastgele sayı (aynı tohum → aynı dizi): yapboz resimleri bölüme göre sabit kalsın diye
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  const karistir = (a, r = Math.random) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  // Sudoku: kutu [genişlik, yükseklik]
+  const KUTU = { 4: [2, 2], 6: [3, 2], 9: [3, 3] };
+  // Çözüm sayısını `limit`e kadar sayar (0 = çelişkili). En az adayı olan kutudan dallanır.
+  function sudokuSay(grid, size, limit = 2) {
+    const [bw, bh] = KUTU[size], g = grid.slice(), full = (1 << size) - 1, kps = size / bw;
+    const R = new Array(size).fill(0), C = new Array(size).fill(0), B = new Array(size).fill(0);
+    const kutu = i => Math.floor(Math.floor(i / size) / bh) * kps + Math.floor((i % size) / bw);
+    for (let i = 0; i < g.length; i++) {
+      if (!g[i]) continue;
+      const bit = 1 << (g[i] - 1), r = Math.floor(i / size), c = i % size, b = kutu(i);
+      if ((R[r] | C[c] | B[b]) & bit) return 0;
+      R[r] |= bit; C[c] |= bit; B[b] |= bit;
+    }
+    let say = 0;
+    const git = () => {
+      let en = -1, enM = 0, enN = 99;
+      for (let i = 0; i < g.length; i++) {
+        if (g[i]) continue;
+        const m = full & ~(R[Math.floor(i / size)] | C[i % size] | B[kutu(i)]);
+        let n = 0; for (let x = m; x; x &= x - 1) n++;
+        if (n === 0) return;
+        if (n < enN) { en = i; enM = m; enN = n; if (n === 1) break; }
+      }
+      if (en < 0) { say++; return; }
+      const r = Math.floor(en / size), c = en % size, b = kutu(en);
+      for (let v = 0; v < size && say < limit; v++) {
+        const bit = 1 << v; if (!(enM & bit)) continue;
+        g[en] = v + 1; R[r] |= bit; C[c] |= bit; B[b] |= bit;
+        git();
+        g[en] = 0; R[r] &= ~bit; C[c] &= ~bit; B[b] &= ~bit;
+      }
+    };
+    git();
+    return say;
+  }
+  // Dolu geçerli tablo üretir, sonra tek çözüm korunarak en çok `blanks` kutu boşaltır.
+  function sudokuUret(size, blanks, r = Math.random) {
+    const [bw, bh] = KUTU[size];
+    const sira = (grup, adet) => karistir(Array.from({ length: adet }, (_, i) => i), r).flatMap(g => karistir(Array.from({ length: grup }, (_, i) => g * grup + i), r));
+    const satir = sira(bh, size / bh), sutun = sira(bw, size / bw), rakam = karistir(Array.from({ length: size }, (_, i) => i + 1), r);
+    const cozum = [];
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const rr = satir[y], cc = sutun[x];
+      cozum.push(rakam[(bw * (rr % bh) + Math.floor(rr / bh) + cc) % size]);
+    }
+    const bulmaca = cozum.slice();
+    let bos = 0;
+    for (const i of karistir(Array.from({ length: size * size }, (_, k) => k), r)) {
+      if (bos >= blanks) break;
+      const v = bulmaca[i]; bulmaca[i] = 0;
+      if (sudokuSay(bulmaca, size, 2) === 1) bos++; else bulmaca[i] = v;
+    }
+    return { cozum, bulmaca };
+  }
+
+  // Kelime Avı
+  const TR_HARF = 'AAAAEEEEİİİIIKKLLMNNRRSTTUÜOÖYBDÇŞZGĞHPCVF';
+  const YON = [[1, 0], [0, 1], [1, 1], [1, -1], [-1, 0], [0, -1], [-1, -1], [-1, 1]]; // sağ, aşağı, iki çapraz, sonra tersleri
+  function kelimeSec(havuz, adet, enUzun, r = Math.random) {
+    const uygun = havuz.filter(w => !w.includes(' ') && [...w].length >= 3 && [...w].length <= enUzun).map(w => w.toLocaleUpperCase('tr'));
+    return karistir([...new Set(uygun)], r).slice(0, adet);
+  }
+  // Kelimeleri tabloya yerleştirir (ortak harfte kesişebilirler), boşları rastgele harfle doldurur. Sığmayan kelime atlanır.
+  function kelimeAvi(n, kelimeler, dirs, r = Math.random) {
+    const grid = new Array(n * n).fill(''), yerler = [], yon = YON.slice(0, dirs);
+    for (const w of kelimeler.slice().sort((a, b) => [...b].length - [...a].length)) {
+      const harf = [...w];
+      for (let deneme = 0; deneme < 300; deneme++) {
+        const [dx, dy] = yon[Math.floor(r() * yon.length)];
+        const x0 = Math.floor(r() * n), y0 = Math.floor(r() * n), x1 = x0 + dx * (harf.length - 1), y1 = y0 + dy * (harf.length - 1);
+        if (x1 < 0 || x1 >= n || y1 < 0 || y1 >= n) continue;
+        const cells = harf.map((_, i) => (y0 + dy * i) * n + x0 + dx * i);
+        if (!cells.every((c, i) => grid[c] === '' || grid[c] === harf[i])) continue;
+        cells.forEach((c, i) => { grid[c] = harf[i]; });
+        yerler.push({ w, cells });
+        break;
+      }
+    }
+    for (let i = 0; i < grid.length; i++) if (grid[i] === '') grid[i] = [...TR_HARF][Math.floor(r() * [...TR_HARF].length)];
+    return { grid, yerler };
+  }
+  // a kutusundan b kutusuna düz çizgi (yatay, dikey, çapraz) varsa kutuları sırayla verir; yoksa null
+  function kelimeHat(n, a, b) {
+    const ax = a % n, ay = Math.floor(a / n), bx = b % n, by = Math.floor(b / n), dx = bx - ax, dy = by - ay;
+    if ((dx === 0 && dy === 0) || !(dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy))) return null;
+    const adim = Math.max(Math.abs(dx), Math.abs(dy)), sx = Math.sign(dx), sy = Math.sign(dy);
+    return Array.from({ length: adim + 1 }, (_, i) => (ay + sy * i) * n + ax + sx * i);
+  }
+  // Seçilen çizgi henüz bulunmamış bir kelimeyi (düz ya da ters) yazıyorsa { idx, cells }, değilse null.
+  // Kelimenin yerleştirildiği yere bakmaz: tabloda tesadüfen oluşan ikinci bir kopya da geçerlidir.
+  function kelimeEsle(grid, n, yerler, bulundu, a, b) {
+    const cells = kelimeHat(n, a, b); if (!cells) return null;
+    const duz = cells.map(c => grid[c]).join(''), ters = cells.map(c => grid[c]).reverse().join('');
+    const idx = yerler.findIndex((y, i) => !bulundu.has(i) && (y.w === duz || y.w === ters));
+    return idx < 0 ? null : { idx, cells };
+  }
+
+  // Yapboz: hiçbir parçanın yerinde kalmadığı karışık sıralama
+  function yapbozKaristir(N, r = Math.random) {
+    for (;;) {
+      const p = karistir(Array.from({ length: N }, (_, i) => i), r);
+      if (p.every((v, i) => v !== i)) return p;
+    }
+  }
+
   // ---------- Serbest Bölüm: oyuncu yoğunluğu kendi seçer ----------
   // Aralıklı ayar: { k, ad, min, max, step?, def, ... } · Seçenekli ayar: { k, ad, sec: [[değer, ad], ...], def }
   const OZEL = {
@@ -195,6 +322,9 @@
     iki: [{ k: 'n', ad: 'Kaç önce', min: 1, max: 4, def: 2 }, { k: 'scored', ad: 'Sembol', min: 10, max: 40, step: 2, def: 20 }],
     goz: [{ k: 'ms', ad: 'Görünme süresi', min: 60, max: 500, step: 20, def: 300, birim: 'ms' }, { k: 'trials', ad: 'Deneme', min: 5, max: 15, def: 8 }, { k: 'positions', ad: 'Konum', sec: [[8, '8'], [12, '12']], def: 8 }],
     saray: [{ k: 'size', ad: 'Kelime', min: 4, max: 16, def: 6 }, { k: 'sn', ad: 'Kelime başına süre', min: 3, max: 8, def: 5, birim: 'sn' }],
+    sudoku: [{ k: 'size', ad: 'Tablo', sec: [[4, '4×4'], [6, '6×6'], [9, '9×9']], def: 6 }, { k: 'bos', ad: 'Boş kutu', sec: [[0, 'Az'], [1, 'Orta'], [2, 'Çok']], def: 1 }],
+    kelime: [{ k: 'n', ad: 'Tablo', min: 6, max: 10, def: 8, kare: true }, { k: 'words', ad: 'Kelime', min: 3, max: 10, def: 6 }, { k: 'dirs', ad: 'Yönler', sec: [[2, 'Düz'], [4, 'Çapraz'], [8, 'Ters de']], def: 2 }],
+    yapboz: [{ k: 'cols', ad: 'Sütun', min: 2, max: 7, def: 4 }, { k: 'rows', ad: 'Satır', min: 2, max: 7, def: 4 }],
   };
   // Kayıtlı/girilen değerleri sınırlara çeker; eksik ya da bozuk olanı varsayılana döndürür
   function customValues(id, raw) {
@@ -225,13 +355,17 @@
       case 'iki': return { n: v.n, scored: v.scored, showMs: 1600 };
       case 'goz': return { ms: v.ms, trials: v.trials, positions: v.positions, animals: v.positions === 12 ? 6 : 4 };
       case 'saray': return { size: v.size, studyMs: v.sn * 1000 };
+      case 'sudoku': return { size: v.size, blanks: Math.round(v.size * v.size * [0.35, 0.5, 0.6][v.bos]), maxMistakes: 3 };
+      case 'kelime': return { n: v.n, words: v.words, dirs: v.dirs, time: v.words * 25 + v.n * 5 };
+      case 'yapboz': return { cols: v.cols, rows: v.rows, maxMoves: Math.ceil(v.cols * v.rows * 2.4) };
     }
     return null;
   }
 
   const ZM = { OZEL, customValues, customParams, dayKey, dayNum, streak, dailyGames, loadState, clamp, nbackSeq, nbackTargets, pickWords, recallScore, pendingRecall, YERLER,
     weekProgress, SLOTS, inSlot, mascot, shareText,
-    LEVELS, START, levelParams, rate, applyResult, skipAhead, totalStars, starOfDay, hesapSoru, esCols };
+    LEVELS, START, levelParams, rate, applyResult, skipAhead, totalStars, starOfDay, hesapSoru, esCols,
+    rng, KUTU, sudokuSay, sudokuUret, kelimeSec, kelimeAvi, kelimeHat, kelimeEsle, yapbozKaristir };
   g.ZM = Object.assign(g.ZM || {}, ZM);
   if (typeof module !== 'undefined' && module.exports) module.exports = g.ZM;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

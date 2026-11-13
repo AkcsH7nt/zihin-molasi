@@ -189,7 +189,7 @@ test('shareText: seri ve adres içerir, skor içermez', () => {
 });
 
 // ---- 3. tur: bölümler (her oyunda 100 bölüm) ----
-const OYUNLAR = ['sira', 'renk', 'es', 'hesap', 'iki', 'goz', 'saray'];
+const OYUNLAR = ['sira', 'renk', 'es', 'hesap', 'iki', 'goz', 'saray', 'sudoku', 'kelime', 'yapboz'];
 
 test('levelParams: her oyunda 1..100 arası her bölüm için sayısal değerler üretir', () => {
   for (const id of OYUNLAR) for (let n = 1; n <= 100; n++) {
@@ -420,4 +420,150 @@ test('Serbest Bölüm: Renk Tuzağı ve Saray türetilen alanlar', () => {
 
 test('loadState: serbest bölüm ayarları varsayılanı boş nesne', () => {
   assert.deepEqual(ZM.loadState({ hist: [] }).ozel, {});
+});
+
+// ---- Bulmacalar: Sudoku, Kelime Avı, Yapboz ----
+const gecerliSudoku = (g, size) => {
+  const [bw, bh] = ZM.KUTU[size], tam = Array.from({ length: size }, (_, i) => i + 1).join();
+  const ayni = a => a.slice().sort((x, y) => x - y).join() === tam;
+  for (let i = 0; i < size; i++) {
+    if (!ayni(g.slice(i * size, i * size + size))) return false;
+    if (!ayni(Array.from({ length: size }, (_, r) => g[r * size + i]))) return false;
+  }
+  for (let br = 0; br < size; br += bh) for (let bc = 0; bc < size; bc += bw) {
+    const k = []; for (let r = 0; r < bh; r++) for (let c = 0; c < bw; c++) k.push(g[(br + r) * size + bc + c]);
+    if (!ayni(k)) return false;
+  }
+  return true;
+};
+
+test('sudokuUret: 4×4, 6×6 ve 9×9 için geçerli çözüm ve tek çözümlü bulmaca üretir', () => {
+  for (const [size, bos] of [[4, 8], [6, 18], [9, 45]]) {
+    const { cozum, bulmaca } = ZM.sudokuUret(size, bos);
+    assert.equal(cozum.length, size * size);
+    assert.ok(gecerliSudoku(cozum, size), size + ' çözüm geçersiz');
+    const bosSay = bulmaca.filter(v => v === 0).length;
+    assert.ok(bosSay > 0 && bosSay <= bos, `${size}: ${bosSay} boş`);
+    bulmaca.forEach((v, i) => assert.ok(v === 0 || v === cozum[i]));
+    assert.equal(ZM.sudokuSay(bulmaca, size, 2), 1, size + ' tek çözümlü değil');
+  }
+});
+
+test('sudokuUret: 9×9 hafif bölümde istenen boş sayısına ulaşır', () => {
+  const { bulmaca } = ZM.sudokuUret(9, 30);
+  assert.equal(bulmaca.filter(v => v === 0).length, 30);
+});
+
+test('sudokuSay: çelişkili tabloda 0, boş 4×4 tabloda birden çok çözüm', () => {
+  const g = new Array(16).fill(0); g[0] = 1; g[1] = 1;
+  assert.equal(ZM.sudokuSay(g, 4, 2), 0);
+  assert.equal(ZM.sudokuSay(new Array(16).fill(0), 4, 2), 2);
+});
+
+test('Sudoku bölümleri: 4×4 → 6×6 → 9×9, boş kutu artar', () => {
+  assert.deepEqual(ZM.levelParams('sudoku', 1), { size: 4, blanks: 4, maxMistakes: 3 });
+  assert.equal(ZM.levelParams('sudoku', 21).size, 6);
+  assert.equal(ZM.levelParams('sudoku', 51).size, 9);
+  assert.equal(ZM.levelParams('sudoku', 51).blanks, 30);
+  const son = ZM.levelParams('sudoku', 100);
+  assert.equal(son.size, 9); assert.ok(son.blanks >= 45 && son.blanks <= 52);
+});
+
+test('kelimeSec: boşluksuz, tabloya sığan, tekrarsız kelimeler; büyük harf Türkçe', () => {
+  const havuz = ['elma', 'kuş kafesi', 'şemsiye', 'ay', 'ıspanak', 'iğne', 'helikopter'];
+  const w = ZM.kelimeSec(havuz, 10, 7);
+  assert.ok(w.includes('ELMA') && w.includes('ŞEMSİYE') && w.includes('ISPANAK') && w.includes('İĞNE'));
+  assert.ok(!w.some(x => x.includes(' ')) && !w.includes('AY') && !w.includes('HELİKOPTER'));
+  assert.equal(new Set(w).size, w.length);
+});
+
+test('kelimeAvi: kelimeler düz bir çizgide, tablo içinde ve harfleri tutuyor; tablo dolu', () => {
+  for (const dirs of [2, 3, 4, 8]) for (let k = 0; k < 20; k++) {
+    const kelimeler = ['ELMA', 'ŞEMSİYE', 'KEDİ', 'TREN', 'BALON', 'GEMİ'];
+    const n = 8, { grid, yerler } = ZM.kelimeAvi(n, kelimeler, dirs);
+    assert.equal(grid.length, n * n);
+    assert.ok(grid.every(h => typeof h === 'string' && [...h].length === 1));
+    assert.ok(yerler.length >= 4, 'en az 4 kelime yerleşmeli');
+    for (const y of yerler) {
+      const harf = [...y.w];
+      assert.equal(y.cells.length, harf.length);
+      y.cells.forEach((c, i) => { assert.ok(c >= 0 && c < n * n); assert.equal(grid[c], harf[i]); });
+      const dx = (y.cells[1] % n) - (y.cells[0] % n), dy = Math.floor(y.cells[1] / n) - Math.floor(y.cells[0] / n);
+      for (let i = 2; i < y.cells.length; i++) {
+        assert.equal((y.cells[i] % n) - (y.cells[i - 1] % n), dx);
+        assert.equal(Math.floor(y.cells[i] / n) - Math.floor(y.cells[i - 1] / n), dy);
+      }
+      if (dirs === 2) assert.ok((dx === 1 && dy === 0) || (dx === 0 && dy === 1), 'yalnız sağa ve aşağı');
+    }
+  }
+});
+
+test('kelimeHat: iki uç arasındaki düz çizginin kutuları; çizgi düz değilse null', () => {
+  assert.deepEqual(ZM.kelimeHat(5, 0, 3), [0, 1, 2, 3]);          // sağa
+  assert.deepEqual(ZM.kelimeHat(5, 3, 0), [3, 2, 1, 0]);          // sola
+  assert.deepEqual(ZM.kelimeHat(5, 2, 17), [2, 7, 12, 17]);       // aşağı
+  assert.deepEqual(ZM.kelimeHat(5, 0, 18), [0, 6, 12, 18]);       // çapraz
+  assert.deepEqual(ZM.kelimeHat(5, 20, 4), [20, 16, 12, 8, 4]);   // ters çapraz
+  assert.equal(ZM.kelimeHat(5, 0, 7), null);                      // at hamlesi: düz değil
+  assert.equal(ZM.kelimeHat(5, 6, 6), null);                      // aynı kutu
+});
+
+test('kelimeEsle: seçilen çizgi bulunmamış bir kelimeyi (düz ya da ters) yazıyorsa sırasını verir', () => {
+  const grid = [...'KEDİXATXXXXXXXXX'], yerler = [{ w: 'KEDİ', cells: [0, 1, 2, 3] }, { w: 'AT', cells: [5, 6] }];
+  assert.deepEqual(ZM.kelimeEsle(grid, 4, yerler, new Set(), 0, 3), { idx: 0, cells: [0, 1, 2, 3] });
+  assert.deepEqual(ZM.kelimeEsle(grid, 4, yerler, new Set(), 3, 0), { idx: 0, cells: [3, 2, 1, 0] });
+  assert.equal(ZM.kelimeEsle(grid, 4, yerler, new Set([0]), 0, 3), null);   // zaten bulundu
+  assert.equal(ZM.kelimeEsle(grid, 4, yerler, new Set(), 0, 2), null);      // KED: kelime değil
+  assert.equal(ZM.kelimeEsle(grid, 4, yerler, new Set(), 0, 6), null);      // düz çizgi değil
+});
+
+test('kelimeEsle: tabloda tesadüfen ikinci kez geçen kelime de kabul edilir', () => {
+  const grid = [...'ATXXXXXXATXXXXXX'], yerler = [{ w: 'AT', cells: [0, 1] }];
+  assert.deepEqual(ZM.kelimeEsle(grid, 4, yerler, new Set(), 8, 9), { idx: 0, cells: [8, 9] });
+});
+
+test('Kelime Avı bölümleri: tablo 6dan 10a büyür, kelime ve yön artar', () => {
+  const ilk = ZM.levelParams('kelime', 1), son = ZM.levelParams('kelime', 100);
+  assert.equal(ilk.n, 6); assert.equal(ilk.words, 3); assert.equal(ilk.dirs, 2);
+  assert.equal(son.n, 10); assert.equal(son.words, 10); assert.equal(son.dirs, 8);
+  for (let n = 1; n <= 100; n++) { const P = ZM.levelParams('kelime', n); assert.ok(P.time >= P.words * 20); }
+});
+
+test('yapbozKaristir: geçerli bir sıralama, hiçbir parça yerinde değil', () => {
+  for (const N of [2, 6, 16, 49]) for (let k = 0; k < 30; k++) {
+    const p = ZM.yapbozKaristir(N);
+    assert.equal(new Set(p).size, N);
+    assert.ok(p.every((v, i) => v >= 0 && v < N && v !== i));
+  }
+});
+
+test('Yapboz bölümleri: 6 parçadan 49 parçaya; hamle hakkı 2 yıldız eşiğinden geniş', () => {
+  assert.equal(ZM.levelParams('yapboz', 1).cols * ZM.levelParams('yapboz', 1).rows, 6);
+  assert.equal(ZM.levelParams('yapboz', 100).cols * ZM.levelParams('yapboz', 100).rows, 49);
+  for (let n = 1; n <= 100; n++) { const P = ZM.levelParams('yapboz', n), N = P.cols * P.rows; assert.ok(P.maxMoves >= Math.ceil(N * 1.7)); }
+});
+
+test('rate: Sudoku hataya, Kelime Avı kalan süreye, Yapboz hamleye göre', () => {
+  const Sd = ZM.levelParams('sudoku', 1);
+  assert.equal(ZM.rate('sudoku', Sd, { done: true, mistakes: 0 }), 3);
+  assert.equal(ZM.rate('sudoku', Sd, { done: true, mistakes: 1 }), 2);
+  assert.equal(ZM.rate('sudoku', Sd, { done: true, mistakes: 3 }), 1);
+  assert.equal(ZM.rate('sudoku', Sd, { done: false, mistakes: 4 }), 0);
+  assert.equal(ZM.rate('kelime', {}, { done: true, left: 0.6 }), 3);
+  assert.equal(ZM.rate('kelime', {}, { done: true, left: 0.3 }), 2);
+  assert.equal(ZM.rate('kelime', {}, { done: true, left: 0.1 }), 1);
+  assert.equal(ZM.rate('kelime', {}, { done: false, left: 0 }), 0);
+  const Y = ZM.levelParams('yapboz', 1); // 6 parça
+  assert.equal(ZM.rate('yapboz', Y, { done: true, moves: 5 }), 3);
+  assert.equal(ZM.rate('yapboz', Y, { done: true, moves: 9 }), 2);
+  assert.equal(ZM.rate('yapboz', Y, { done: true, moves: Y.maxMoves }), 1);
+  assert.equal(ZM.rate('yapboz', Y, { done: false, moves: Y.maxMoves }), 0);
+});
+
+test('rng: aynı tohum aynı diziyi verir', () => {
+  const a = ZM.rng(42), b = ZM.rng(42), c = ZM.rng(43);
+  const x = [a(), a(), a()], y = [b(), b(), b()];
+  assert.deepEqual(x, y);
+  assert.notEqual(x[0], c());
+  assert.ok(x.every(v => v >= 0 && v < 1));
 });
