@@ -83,7 +83,11 @@
     return r && Array.isArray(r.w) && r.next === undefined ? k : null;
   }
 
-  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, startLevel, nbackSeq, nbackTargets, nbackAdapt, gozAdapt, gozScore, pickWords, recallScore, pendingRecall };
+  // Hafıza Sarayı: memurun her gün yürüdüğü güzergâh
+  const YERLER = ['Bina kapısı', 'Danışma', 'Merdiven', 'Asansör', 'Koridor', 'Çay ocağı', 'Senin masan', 'Pencere', 'Dolap', 'Toplantı odası'];
+  const palaceSize = level => 3 + clamp(level, 1, 7);
+
+  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, startLevel, nbackSeq, nbackTargets, nbackAdapt, gozAdapt, gozScore, pickWords, recallScore, pendingRecall, YERLER, palaceSize };
   g.ZM = Object.assign(g.ZM || {}, ZM);
   if (typeof module !== 'undefined' && module.exports) module.exports = g.ZM;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

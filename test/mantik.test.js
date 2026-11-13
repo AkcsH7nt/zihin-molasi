@@ -135,3 +135,14 @@ test('pendingRecall: dün zaten sorulduysa ya da kayıt yoksa null', () => {
   assert.equal(ZM.pendingRecall({ '2026-11-10': { w: ['a'] } }, T), null);
   assert.equal(ZM.pendingRecall({}, T), null);
 });
+
+test('Hafıza Sarayı: seviye 1 → 4 yer, seviye 7 → 10 yer', () => {
+  assert.equal(ZM.palaceSize(1), 4);
+  assert.equal(ZM.palaceSize(7), 10);
+  assert.equal(ZM.palaceSize(99), 10);
+});
+
+test('Hafıza Sarayı: en büyük seviyeye yetecek kadar yer var', () => {
+  assert.ok(ZM.YERLER.length >= ZM.palaceSize(7));
+  assert.equal(ZM.YERLER[0], 'Bina kapısı');
+});
