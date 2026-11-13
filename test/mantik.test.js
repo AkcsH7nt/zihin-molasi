@@ -84,3 +84,23 @@ test('nbackAdapt: başarıya göre n artar/azalır, 1..4 sınırında', () => {
   assert.equal(ZM.nbackAdapt(3, 0.4), 2);
   assert.equal(ZM.nbackAdapt(2, 0.6), 2);
 });
+
+test('gozAdapt: üst üste 2 doğruda süre %20 kısalır', () => {
+  assert.deepEqual(ZM.gozAdapt(300, true, 1), { ms: 240, run: 0 });
+  assert.deepEqual(ZM.gozAdapt(300, true, 0), { ms: 300, run: 1 });
+});
+
+test('gozAdapt: yanlışta süre %25 uzar', () => {
+  assert.deepEqual(ZM.gozAdapt(300, false, 1), { ms: 375, run: 0 });
+});
+
+test('gozAdapt: süre 50..600 ms arasında kalır', () => {
+  assert.equal(ZM.gozAdapt(55, true, 2).ms, 50);
+  assert.equal(ZM.gozAdapt(550, false, 0).ms, 600);
+});
+
+test('gozScore: yalnız doğrular puan alır, kısa süre daha çok', () => {
+  assert.equal(ZM.gozScore([{ ok: true, ms: 100 }, { ok: false, ms: 50 }]), 50);
+  assert.equal(ZM.gozScore([{ ok: true, ms: 600 }]), 1);
+  assert.equal(ZM.gozScore([]), 0);
+});

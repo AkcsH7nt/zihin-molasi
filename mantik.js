@@ -56,7 +56,16 @@
   const nbackTargets = (seq, n) => seq.map((v, i) => i >= n && v === seq[i - n]);
   const nbackAdapt = (n, acc) => clamp(acc >= 0.8 ? n + 1 : acc < 0.5 ? n - 1 : n, 1, 4);
 
-  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, startLevel, nbackSeq, nbackTargets, nbackAdapt };
+  // Göz Ucu: 2 doğru üst üste → süre ×0.8; yanlış → ×1.25; 50..600 ms.
+  function gozAdapt(ms, ok, run) {
+    if (!ok) return { ms: clamp(Math.round(ms * 1.25), 50, 600), run: 0 };
+    run += 1;
+    if (run >= 2) return { ms: clamp(Math.round(ms * 0.8), 50, 600), run: 0 };
+    return { ms, run };
+  }
+  const gozScore = trials => trials.reduce((t, x) => t + (x.ok ? Math.max(1, Math.round((600 - x.ms) / 10)) : 0), 0);
+
+  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, startLevel, nbackSeq, nbackTargets, nbackAdapt, gozAdapt, gozScore };
   g.ZM = Object.assign(g.ZM || {}, ZM);
   if (typeof module !== 'undefined' && module.exports) module.exports = g.ZM;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

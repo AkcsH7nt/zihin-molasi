@@ -152,6 +152,17 @@ h1,h2,h3,p{margin:0}
 .nb-btn.ok{background:var(--ok);box-shadow:0 4px 0 #1F7442}
 .nb-btn.bad{background:var(--bad);box-shadow:0 4px 0 #A83232}
 
+/* Göz Ucu */
+.goz{position:relative;width:100%;max-width:340px;aspect-ratio:1;margin:0 auto;border-radius:28px;background:var(--card);border:2px solid var(--line)}
+.goz .slot{position:absolute;width:52px;height:52px;margin:-26px 0 0 -26px;display:grid;place-items:center;font-size:36px;line-height:1;border-radius:50%}
+.goz .mid{left:50%;top:50%;font-size:46px;width:64px;height:64px;margin:-32px 0 0 -32px;color:var(--soft)}
+.goz.mask .slot{background:repeating-linear-gradient(45deg,var(--soft) 0 3px,transparent 3px 7px);opacity:.6}
+.goz.ask .per{border:3px dashed var(--line);cursor:pointer}
+.goz.ask .per:active{background:var(--line)}
+.goz .per.right{border:3px solid var(--ok)}
+.goz .per.wrong{border:3px solid var(--bad)}
+.goz-ans{min-height:150px}
+
 /* sonuç */
 .result{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:16px}
 .result .big{font-size:84px;font-weight:850;line-height:1;font-variant-numeric:tabular-nums}
@@ -233,6 +244,7 @@ const ICON = {
   renk: '<svg viewBox="0 0 24 24"><text x="12" y="17.5" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor" font-family="system-ui,sans-serif">Aa</text></svg>',
   es: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="9" height="13" rx="2" transform="rotate(-8 7.5 11.5)"/><rect x="12" y="5" width="9" height="13" rx="2" opacity=".55" transform="rotate(8 16.5 11.5)"/></svg>',
   iki: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6 5 12l6 6M19 6l-6 6 6 6"/></svg>',
+  goz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>',
   hesap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 3.5v7M3.5 7h7M14 7h6.5M15 15l5 5M20 15l-5 5M3.5 17.5h7"/></svg>',
 };
 
@@ -447,8 +459,65 @@ const GAMES = {
       return () => { alive = false; };
     }
   },
+
+  goz: {
+    name: 'Göz Ucu', skill: 'Algı hızı', color: '#D9577E', unit: 'puan', timed: false,
+    howto: 'Ortada bir hayvan, kenarda bir <b>yıldız</b> göz açıp kapayıncaya kadar görünecek. Gözünü ortadaki <b>+</b> işaretinde tut. Sonra iki soru: ortada ne vardı, yıldız neredeydi? İkisini de bilirsen görüntü daha da hızlanır. 15 deneme.',
+    bilim: 'Algı hızı antrenmanı, uzun vadeli etkisi en çok araştırılan beyin egzersizlerindendir (ACTIVE çalışması, Edwards ve ark., 2017).',
+    start(stage, api) {
+      const AN = ['🐱', '🐶', '🐰', '🦊'], N = 15;
+      let alive = true, ms = S.lvl.goz ? Math.min(600, Math.round(S.lvl.goz * 1.25)) : 350, run = 0, best = null;
+      const trials = [];
+      const pos = Array.from({ length: 8 }, (_, k) => {
+        const a = k * Math.PI / 4; return { x: 50 + 38 * Math.cos(a), y: 50 + 38 * Math.sin(a) };
+      });
+      stage.innerHTML = '<div class="msg"></div><div class="goz"><span class="slot mid"></span>' +
+        pos.map((p, k) => `<button class="slot per" data-k="${k}" style="left:${p.x}%;top:${p.y}%"></button>`).join('') +
+        '</div><div class="choices4 goz-ans"></div>';
+      const M = $('.msg', stage), F = $('.goz', stage), MID = $('.mid', stage), PER = [...stage.querySelectorAll('.per')], ANS = $('.goz-ans', stage);
+      const say = (t, c = '') => { M.textContent = t; M.className = 'msg ' + c; };
+      const waitTap = (root, sel) => new Promise(res => {
+        const h = e => { const b = e.target.closest(sel); if (!b) return; root.removeEventListener('pointerdown', h); res(b); };
+        root.addEventListener('pointerdown', h);
+      });
+      function clear() { F.className = 'goz'; MID.textContent = ''; PER.forEach(p => { p.textContent = ''; p.className = 'slot per'; }); ANS.innerHTML = ''; }
+      async function trial(t) {
+        clear(); api.stat(`Deneme ${t + 1}/${N} · ${ms} ms`);
+        say('Ortadaki + işaretine bak'); MID.textContent = '+'; await sleep(700); if (!alive) return;
+        const an = Math.floor(Math.random() * 4), k = Math.floor(Math.random() * 8);
+        say(''); MID.textContent = AN[an]; PER[k].textContent = '⭐';
+        await sleep(ms); if (!alive) return;
+        F.classList.add('mask'); MID.textContent = ''; PER[k].textContent = '';
+        await sleep(300); if (!alive) return;
+        F.classList.remove('mask');
+        say('Ortada ne vardı?', 'go');
+        ANS.innerHTML = AN.map((a, i) => `<button class="choice" data-i="${i}" style="font-size:34px">${a}</button>`).join('');
+        const b1 = await waitTap(ANS, '.choice'); if (!alive) return;
+        const ok1 = +b1.dataset.i === an; ANS.innerHTML = '';
+        say('Yıldız neredeydi?', 'go'); F.classList.add('ask');
+        const b2 = await waitTap(F, '.per'); if (!alive) return;
+        F.classList.remove('ask');
+        const ok2 = +b2.dataset.k === k, ok = ok1 && ok2;
+        PER[k].textContent = '⭐'; PER[k].classList.add('right');
+        if (!ok2) b2.classList.add('wrong');
+        trials.push({ ok, ms });
+        if (ok) { beep(760, .07); if (best == null || ms < best) best = ms; say(pick(PRAISE), 'ok'); }
+        else { buzz(80); beep(160, .15, 'square'); say(!ok1 && !ok2 ? 'İkisi de kaçtı' : !ok1 ? `Ortada ${AN[an]} vardı` : 'Yıldız başka yerdeydi', 'bad'); }
+        ({ ms, run } = ZM.gozAdapt(ms, ok, run));
+        await sleep(900);
+      }
+      (async () => {
+        for (let t = 0; t < N && alive; t++) await trial(t);
+        if (!alive) return;
+        alive = false; if (best != null) S.lvl.goz = best;
+        const okN = trials.filter(x => x.ok).length;
+        api.end(ZM.gozScore(trials), `${N} denemenin ${okN}'inde ikisini de bildin.${best != null ? ` En hızlı: ${best} ms.` : ''}`);
+      })();
+      return () => { alive = false; };
+    }
+  },
 };
-const ORDER = ['sira', 'renk', 'es', 'hesap', 'iki'];
+const ORDER = ['sira', 'renk', 'es', 'hesap', 'iki', 'goz'];
 
 /* ---------- günün molası ---------- */
 const dailyGames = () => ZM.dailyGames(dayNum(), ORDER);
