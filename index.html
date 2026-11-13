@@ -162,6 +162,7 @@ h1,h2,h3,p{margin:0}
 </head>
 <body>
 <div id="app"></div>
+<script src="mantik.js"></script>
 <script>
 'use strict';
 /* ---------- yardımcılar ---------- */
@@ -171,23 +172,18 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rnd = n => Math.floor(Math.random() * n);
 const pick = a => a[rnd(a.length)];
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const dayKey = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-const dayNum = (d = new Date()) => Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5);
+const { dayKey, dayNum } = ZM;
 
 /* ---------- kayıt (telefonun içinde) ---------- */
 const KEY = 'zihinmolasi.v1';
-let S = { hist: [], daily: {}, sound: false, hideInstall: false };
-try { Object.assign(S, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) {}
+let S;
+try { S = ZM.loadState(JSON.parse(localStorage.getItem(KEY))); } catch (e) { S = ZM.loadState(null); }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 const histOf = id => S.hist.filter(h => h.g === id);
 const bestOf = id => { const h = histOf(id); return h.length ? Math.max(...h.map(x => x.s)) : null; };
 const playedDays = () => new Set(S.hist.map(h => h.d));
-function streak() {
-  const days = playedDays(); let n = 0; const d = new Date();
-  if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
-  while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
-  return n;
-}
+const streakInfo = () => ZM.streak(playedDays(), new Date());
+const streak = () => streakInfo().n;
 
 /* ---------- ses ve titreşim ---------- */
 let actx;
@@ -389,7 +385,7 @@ const GAMES = {
 const ORDER = ['sira', 'renk', 'es', 'hesap'];
 
 /* ---------- günün molası ---------- */
-function dailyGames() { const k = dayNum() % ORDER.length; return [0, 1, 2].map(i => ORDER[(k + i) % ORDER.length]); }
+const dailyGames = () => ZM.dailyGames(dayNum(), ORDER);
 const dailyDone = () => !!S.daily[dayKey()];
 const playedToday = id => S.hist.some(h => h.g === id && h.d === dayKey());
 
@@ -434,7 +430,7 @@ function installCard() {
 
 function renderHome() {
   stopGame();
-  const [hi, sub] = greeting(), st = streak(), days = playedDays(), dg = dailyGames(), done = dailyDone();
+  const [hi, sub] = greeting(), si = streakInfo(), st = si.n, days = playedDays(), dg = dailyGames(), done = dailyDone();
   const week = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 6 + i); return d; });
   const DN = ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct'];
   app.innerHTML = `
@@ -446,7 +442,7 @@ function renderHome() {
     ${installCard()}
     <section class="card streak">
       <div class="fire">${st ? '🔥' : '🌱'}</div>
-      <div><b>${st ? st + ' gün' : 'Yeni başlangıç'}</b><small>${st ? 'üst üste mola verdin' : 'Bugün ilk molanı ver'}</small></div>
+      <div><b>${st ? st + ' gün' : 'Yeni başlangıç'}</b><small>${st ? 'üst üste mola verdin' : 'Bugün ilk molanı ver'}${si.shielded ? ' · 🛡 1 boş gün affedildi' : ''}</small></div>
       <div class="week">${week.map(d => `<span class="${days.has(dayKey(d)) ? 'on' : ''} ${dayKey(d) === dayKey() ? 'today' : ''}"><i></i>${DN[d.getDay()]}</span>`).join('')}</div>
     </section>
     <section class="card daily">

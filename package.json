@@ -1,0 +1,7 @@
+{
+  "name": "zihin-molasi",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}
