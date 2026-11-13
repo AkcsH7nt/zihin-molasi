@@ -33,7 +33,7 @@
   const dailyGames = (dn, ids, k = 3) => Array.from({ length: k }, (_, i) => ids[(dn + i) % ids.length]);
 
   function loadState(raw) {
-    const s = { hist: [], daily: {}, sound: false, hideInstall: false, lvl: {}, words: {}, onb: false, slot: null, bolum: {} };
+    const s = { hist: [], daily: {}, sound: false, hideInstall: false, lvl: {}, words: {}, onb: false, slot: null, bolum: {}, ozel: {} };
     if (raw && typeof raw === 'object') {
       for (const k of Object.keys(s)) if (raw[k] !== undefined && raw[k] !== null) s[k] = raw[k];
     }
@@ -184,7 +184,52 @@
 
   const esCols = cards => (cards <= 6 ? 3 : cards <= 16 ? 4 : cards <= 30 ? 5 : 6);
 
-  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, nbackSeq, nbackTargets, pickWords, recallScore, pendingRecall, YERLER,
+  // ---------- Serbest Bölüm: oyuncu yoğunluğu kendi seçer ----------
+  // Aralıklı ayar: { k, ad, min, max, step?, def, ... } · Seçenekli ayar: { k, ad, sec: [[değer, ad], ...], def }
+  const OZEL = {
+    sira: [{ k: 'len', ad: 'Sıra uzunluğu', min: 3, max: 10, def: 5, birim: 'kare' }, { k: 'rounds', ad: 'Tur', min: 1, max: 6, def: 3 }, { k: 'grid', ad: 'Tahta', min: 3, max: 5, def: 3, kare: true }],
+    renk: [{ k: 'items', ad: 'Kelime', min: 10, max: 40, step: 2, def: 20 }, { k: 'colors', ad: 'Renk', min: 3, max: 6, def: 4 }, { k: 'degis', ad: 'Kural değişimi', sec: [[0, 'Yok'], [1, 'Var']], def: 1 }],
+    es: [{ k: 'pairs', ad: 'Kart', min: 3, max: 18, def: 6, carp: 2 }],
+    hesap: [{ k: 'ops', ad: 'İşlem', sec: [['+-', 'Toplama-çıkarma'], ['x', 'Çarpma']], def: '+-' }, { k: 'digits', ad: 'Basamak', min: 1, max: 3, def: 2 },
+      { k: 'terms', ad: 'Sayı adedi', min: 2, max: 4, def: 2 }, { k: 'questions', ad: 'Soru', min: 5, max: 20, def: 10 }],
+    iki: [{ k: 'n', ad: 'Kaç önce', min: 1, max: 4, def: 2 }, { k: 'scored', ad: 'Sembol', min: 10, max: 40, step: 2, def: 20 }],
+    goz: [{ k: 'ms', ad: 'Görünme süresi', min: 60, max: 500, step: 20, def: 300, birim: 'ms' }, { k: 'trials', ad: 'Deneme', min: 5, max: 15, def: 8 }, { k: 'positions', ad: 'Konum', sec: [[8, '8'], [12, '12']], def: 8 }],
+    saray: [{ k: 'size', ad: 'Kelime', min: 4, max: 16, def: 6 }, { k: 'sn', ad: 'Kelime başına süre', min: 3, max: 8, def: 5, birim: 'sn' }],
+  };
+  // Kayıtlı/girilen değerleri sınırlara çeker; eksik ya da bozuk olanı varsayılana döndürür
+  function customValues(id, raw) {
+    const v = {};
+    for (const c of OZEL[id]) {
+      const x = raw ? raw[c.k] : undefined;
+      if (c.sec) v[c.k] = c.sec.some(([val]) => val === x) ? x : c.def;
+      else {
+        const st = c.step || 1, n = Number(x);
+        v[c.k] = x === undefined || x === null || !Number.isFinite(n) ? c.def : clamp(c.min + Math.round((n - c.min) / st) * st, c.min, c.max);
+      }
+    }
+    if (id === 'sira') v.len = Math.min(v.len, v.grid * v.grid - 1);
+    if (id === 'hesap' && v.ops === 'x') { v.digits = Math.min(v.digits, 2); v.terms = 2; }
+    return v;
+  }
+  function customParams(id, raw) {
+    const v = customValues(id, raw);
+    switch (id) {
+      case 'sira': return { len: v.len, grid: v.grid, rounds: v.rounds, onMs: 560, maxMistakes: 2 };
+      case 'es': return { pairs: v.pairs, maxMoves: Math.ceil(v.pairs * 2.6) };
+      case 'hesap': {
+        const x = v.ops === 'x', d = x ? [v.digits, 1] : Array(v.terms).fill(v.digits);
+        const sec = x ? (v.digits === 2 ? 9 : 5) : 2 + v.digits * 2 + (v.terms - 2) * 2;
+        return { d, ops: v.ops, sec, questions: v.questions, time: v.questions * sec, maxWrong: Math.floor(v.questions * 0.25) };
+      }
+      case 'renk': return { colors: v.colors, items: v.items, switchP: v.degis ? 0.25 : 0, time: Math.round(v.items * 2.2), maxWrong: Math.floor(v.items * 0.2) };
+      case 'iki': return { n: v.n, scored: v.scored, showMs: 1600 };
+      case 'goz': return { ms: v.ms, trials: v.trials, positions: v.positions, animals: v.positions === 12 ? 6 : 4 };
+      case 'saray': return { size: v.size, studyMs: v.sn * 1000 };
+    }
+    return null;
+  }
+
+  const ZM = { OZEL, customValues, customParams, dayKey, dayNum, streak, dailyGames, loadState, clamp, nbackSeq, nbackTargets, pickWords, recallScore, pendingRecall, YERLER,
     weekProgress, SLOTS, inSlot, mascot, shareText,
     LEVELS, START, levelParams, rate, applyResult, skipAhead, totalStars, starOfDay, hesapSoru, esCols };
   g.ZM = Object.assign(g.ZM || {}, ZM);

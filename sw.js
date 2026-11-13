@@ -1,5 +1,5 @@
 // Zihin Molası — çevrimdışı çalışma. Dosya değişince SURUM'u artır.
-const SURUM = 'zm-7';
+const SURUM = 'zm-8';
 const DOSYALAR = ['./', 'index.html', 'mantik.js', 'kelimeler.js', 'fonts/fredoka-latin-wght-normal.woff2', 'fonts/fredoka-latin-ext-wght-normal.woff2', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

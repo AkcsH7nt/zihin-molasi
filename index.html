@@ -291,7 +291,8 @@ b,h1,h2,h3{font-weight:650}
 .bl.kilit small{font-size:11px;color:var(--soft)}
 .bolum-kart{display:flex;flex-direction:column;gap:4px;align-items:center;padding:14px;max-width:360px;margin:0 auto;width:100%}
 .bolum-kart b{font-size:20px}
-.bolum-kart span{font-size:16px}
+.bolum-kart span{font-size:16px;text-align:center}
+.bolum-kart small{text-align:center}
 .bolum-kart small{color:var(--soft);font-size:14px}
 .nasil{text-align:left;max-width:360px;margin:0 auto;width:100%}
 .nasil summary{color:var(--soft);font-weight:600;font-size:15px;cursor:pointer;text-align:center;padding:6px}
@@ -299,6 +300,24 @@ b,h1,h2,h3{font-weight:650}
 .secenekler{display:flex;flex-direction:column;gap:10px;text-align:left}
 .secenek{display:flex;align-items:center;gap:14px;text-align:left;width:100%}
 .secenek>span:first-child{font-size:30px}
+
+/* Kendin kur */
+.kur{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-bottom:16px}
+.kur-bas{display:flex;align-items:center;gap:12px}
+.kur-bas b{display:block;font-size:22px}
+.kur-bas small{color:var(--soft);font-size:14px}
+#kurIc{display:flex;flex-direction:column;gap:10px}
+.kr{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:10px 12px 10px 16px;font-weight:550}
+.kr.pasif{opacity:.45}
+.adim{display:flex;align-items:center;gap:6px}
+.adim b{min-width:76px;text-align:center;font-size:18px;font-variant-numeric:tabular-nums}
+.adim button{width:44px;height:44px;border-radius:14px;background:var(--bg);border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-size:24px;font-weight:600;line-height:1}
+.adim button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.adim button:disabled{opacity:.35;box-shadow:none}
+.seg{display:flex;background:var(--bg);border:2px solid var(--line);border-radius:14px;padding:3px;gap:3px}
+.seg button{padding:9px 10px;border-radius:10px;font-size:14px;font-weight:600;color:var(--soft)}
+.seg button.on{background:var(--coral);color:#fff}
+.kur-btn{margin:10px 0 0;padding:13px;font-size:16px}
 
 /* sonuç */
 .result{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:16px}
@@ -541,7 +560,7 @@ const GAMES = {
         for (const c of cands) { if (opts.size >= 4) break; if (c >= 0 && c !== ans) opts.add(c); }
         while (opts.size < 4) opts.add(ans + r(3, 15));
         const metin = q.text + ' = ?';
-        Q.textContent = metin; Q.style.fontSize = metin.length > 16 ? '30px' : metin.length > 11 ? '40px' : '';
+        Q.textContent = metin; Q.style.fontSize = metin.length > 20 ? '24px' : metin.length > 16 ? '30px' : metin.length > 11 ? '40px' : '';
         Q.classList.remove('pop'); void Q.offsetWidth; Q.classList.add('pop');
         B.innerHTML = shuffle([...opts]).map(o => `<button class="choice" data-v="${o}">${o}</button>`).join('');
       }
@@ -890,6 +909,11 @@ function renderHome() {
         ${rozet(id)}
       </button>`; }).join('')}
     </div>
+    <h2 class="sec" style="margin-top:22px">Serbest bölüm</h2>
+    <button class="card saray-card" id="serbest" style="margin-bottom:0">
+      <span class="gico" style="background:#8E7F8A;font-size:28px">🎛</span>
+      <span class="ginfo"><b>Kendin kur</b><small>Kart sayısı, basamak, tur… yoğunluğu sen seç</small></span>
+    </button>
     <button class="btn ghost" id="bilim" style="margin-top:22px">🔬 Bilim ne diyor?</button>
     <p class="foot">Zihin Molası eğlence için hazırlanmış kısa beyin egzersizleridir;<br>tıbbi bir tedavi yerine geçmez. · Prototip</p>
   </div>`;
@@ -899,6 +923,7 @@ function renderHome() {
   const mini = $('#mini'); if (mini) mini.onclick = () => { enterSub(); playGame(dg[0], null); };
   app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => openGame(b.dataset.g));
   $('#bilim').onclick = () => { enterSub(); bilimPage(); };
+  $('#serbest').onclick = () => { enterSub(); serbestListe(); };
   $('#saray').onclick = () => openGame('saray');
   const hide = $('#hideInst'); if (hide) hide.onclick = () => { S.hideInstall = true; save(); renderHome(); };
   const inst = $('#inst'); if (inst) inst.onclick = async () => { deferredPrompt.prompt(); try { await deferredPrompt.userChoice; } catch (e) {} deferredPrompt = null; renderHome(); };
@@ -992,10 +1017,12 @@ function levelMap(id) {
     <span class="ginfo"><b>Bölüm ${b.cur}</b><small>${g.ozet(ZM.levelParams(id, b.cur))}</small></span>
     <button class="btn" id="oyna">Oyna</button>
   </div>
+  <button class="btn ghost kur-btn" id="kur">🎛 Kendin kur · serbest bölüm</button>
   ${Array.from({ length: ZM.LEVELS / 10 }, (_, t) => kat(t)).join('')}
   ${b.cur < ZM.LEVELS ? '<button class="link" id="atla">Bu bölümler kolay mı? 10 bölüm ileri atla</button>' : ''}`);
   $('#x').onclick = backHome;
   $('#oyna').onclick = () => playGame(id, null, b.cur, 'map');
+  $('#kur').onclick = () => kurScreen(id, 'map');
   app.querySelectorAll('.bl:not(.kilit)').forEach(x => x.onclick = () => playGame(id, null, +x.dataset.n, 'map'));
   const atla = $('#atla'); if (atla) atla.onclick = () => { S.bolum[id] = ZM.skipAhead(S.bolum[id]); save(); levelMap(id); };
   if (b.cur > 10) { const s = $('.bl.simdi'); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }
@@ -1020,38 +1047,48 @@ function playGame(id, ctx, n, from) {
   <button class="btn" id="go">Başla</button>`);
   $('#x').onclick = cik;
   const dr = $('#ders'); if (dr) dr.onclick = () => sarayDers(() => playGame('saray', ctx, n, from));
-  $('#go').onclick = async () => {
-    const my = navId; $('#go').disabled = true;
-    if (g.timed) {
-      for (const k of [3, 2, 1]) {
-        if (navId !== my) return;
-        const c = document.createElement('div'); c.className = 'count'; c.textContent = k; document.body.appendChild(c); beep(440, .08); await sleep(600); c.remove();
-      }
-    }
-    if (navId !== my) return; // geri sayım sırasında çıkıldı
-    runGame(id, ctx, n, from);
-  };
+  $('#go').onclick = async () => { $('#go').disabled = true; if (await geriSay(g)) runGame(id, ctx, n, from); };
 }
 
-function runGame(id, ctx, n, from) {
-  const g = GAMES[id], P = ZM.levelParams(id, n);
+// Süreli oyunlarda 3-2-1. Sayım sırasında ekrandan çıkıldıysa false döner.
+async function geriSay(g) {
+  const my = navId;
+  if (g.timed) {
+    for (const k of [3, 2, 1]) {
+      if (navId !== my) return false;
+      const c = document.createElement('div'); c.className = 'count'; c.textContent = k; document.body.appendChild(c); beep(440, .08); await sleep(600); c.remove();
+    }
+  }
+  return navId === my;
+}
+
+// from: 'map' → bölüm haritası · 'ozel:map' / 'ozel:liste' → Kendin kur ekranı · yoksa ana sayfa
+function geriDon(id, from) {
+  if (from === 'map') return levelMap(id);
+  if (from && from.startsWith('ozel:')) return kurScreen(id, from.slice(5));
+  backHome();
+}
+
+function runGame(id, ctx, n, from, ozelP) {
+  const g = GAMES[id], P = ozelP || ZM.levelParams(id, n);
   go(`
-  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">${g.name} <small class="bno">Bölüm ${n}</small></span><span class="gs" id="gs"></span></div>
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">${g.name} <small class="bno">${ozelP ? 'Serbest' : 'Bölüm ' + n}</small></span><span class="gs" id="gs"></span></div>
   <div class="tbar ${g.timed ? '' : 'hide'}"><i id="tb"></i></div>
   <div class="stage" id="stage"></div>`);
-  $('#x').onclick = () => (from === 'map' ? levelMap(id) : backHome());
+  $('#x').onclick = () => geriDon(id, from);
   const gs = $('#gs'), tb = $('#tb');
   let ended = false;
   const my = navId;
   const api = {
     stat: t => { gs.textContent = t; },
     time: f => { tb.style.transform = `scaleX(${f})`; tb.style.background = f < .2 ? 'var(--bad)' : 'var(--teal)'; },
-    end: (o, detail) => { if (ended || navId !== my) return; ended = true; stopGame(); showResult(id, n, ZM.rate(id, P, o), detail, ctx, from); },
+    end: (o, detail) => { if (ended || navId !== my) return; ended = true; stopGame(); showResult(id, n, ZM.rate(id, P, o), detail, ctx, from, ozelP); },
   };
   cleanup = g.start($('#stage'), api, P) || null;
 }
 
-function showResult(id, n, stars, detail, ctx, from) {
+function showResult(id, n, stars, detail, ctx, from, ozelP) {
+  if (ozelP) return ozelSonuc(id, stars, detail, from, ozelP);
   const g = GAMES[id], once = bolumOf(id), eski = once.st[n] || 0;
   S.bolum[id] = ZM.applyResult(S.bolum[id], n, stars);
   S.hist.push({ g: id, s: stars, b: n, d: dayKey(), t: Date.now() });
@@ -1080,7 +1117,7 @@ function showResult(id, n, stars, detail, ctx, from) {
   </div>
   ${dugmeler}`);
   if (stars === 3) konfeti();
-  $('#x').onclick = () => (from === 'map' ? levelMap(id) : backHome());
+  $('#x').onclick = () => geriDon(id, from);
   const nx = $('#next'); if (nx) nx.onclick = () => playGame(ctx.daily[ctx.i + 1], { ...ctx, i: ctx.i + 1 });
   const f = $('#fin'); if (f) f.onclick = () => {
     const k = ctx.k || dayKey(), w = S.words[k];
@@ -1090,6 +1127,80 @@ function showResult(id, n, stars, detail, ctx, from) {
   const il = $('#ileri'); if (il) il.onclick = () => playGame(id, null, n + 1, from);
   const a = $('#again'); if (a) a.onclick = () => playGame(id, null, n, from);
   const mp = $('#map'); if (mp) mp.onclick = () => levelMap(id);
+}
+
+/* ---------- Serbest Bölüm: Kendin kur ---------- */
+function serbestListe() {
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">Serbest bölüm</span></div>
+  <div class="howto" style="justify-content:flex-start">
+    <p>Hangi oyunda kendi bölümünü kurmak istersin? Serbest bölümler yıldız verir, günün serisine sayılır; 100 bölümlük ilerlemeni etkilemez.</p>
+    <div class="secenekler">${[...ORDER, 'saray'].map(id => `
+      <button class="card secenek" data-id="${id}"><span class="gico" style="background:${GAMES[id].color}">${ICON[id]}</span><span class="ginfo"><b>${GAMES[id].name}</b><small>${GAMES[id].ozet(ZM.customParams(id, S.ozel[id]))}</small></span></button>`).join('')}
+    </div>
+  </div>`);
+  $('#x').onclick = backHome;
+  app.querySelectorAll('.secenek').forEach(b => b.onclick = () => kurScreen(b.dataset.id, 'liste'));
+}
+
+// kaynak: 'map' (bölüm haritasından) ya da 'liste' (ana sayfadaki Serbest bölüm listesinden)
+function kurScreen(id, kaynak) {
+  const g = GAMES[id], spec = ZM.OZEL[id];
+  let v = ZM.customValues(id, S.ozel[id]);
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">Kendin kur</span></div>
+  <div class="kur">
+    <div class="kur-bas"><span class="gico" style="background:${g.color}">${ICON[id]}</span><div><b>${g.name}</b><small>Yoğunluğu sen belirle</small></div></div>
+    <div id="kurIc"></div>
+  </div>
+  <button class="btn" id="go">Bölümü üret ve oyna</button>`);
+  $('#x').onclick = () => (kaynak === 'map' ? levelMap(id) : serbestListe());
+  const ic = $('#kurIc');
+  const yaz = c => c.kare ? `${v[c.k]}×${v[c.k]}` : `${v[c.k] * (c.carp || 1)}${c.birim ? ' ' + c.birim : ''}`;
+  function ciz() {
+    const P = ZM.customParams(id, v);
+    ic.innerHTML = spec.map(c => {
+      const pasif = id === 'hesap' && v.ops === 'x' && c.k === 'terms';
+      if (c.sec) return `<div class="kr"><span>${c.ad}</span><span class="seg">${c.sec.map(([val, ad], i) =>
+        `<button data-k="${c.k}" data-i="${i}" class="${v[c.k] === val ? 'on' : ''}">${ad}</button>`).join('')}</span></div>`;
+      return `<div class="kr ${pasif ? 'pasif' : ''}"><span>${c.ad}</span><span class="adim">
+        <button data-k="${c.k}" data-d="-1" ${pasif || v[c.k] <= c.min ? 'disabled' : ''} aria-label="${c.ad} azalt">−</button>
+        <b>${yaz(c)}</b>
+        <button data-k="${c.k}" data-d="1" ${pasif || v[c.k] >= c.max ? 'disabled' : ''} aria-label="${c.ad} artır">+</button></span></div>`;
+    }).join('') + `<div class="card bolum-kart"><b>Bu bölüm</b><span>${g.ozet(P)}</span><small>🎯 ${g.hedef(P)}</small></div>`;
+  }
+  ic.addEventListener('click', e => {
+    const b = e.target.closest('button[data-k]'); if (!b || b.disabled) return;
+    const c = spec.find(x => x.k === b.dataset.k);
+    const yeni = Object.assign({}, v);
+    if (c.sec) yeni[c.k] = c.sec[+b.dataset.i][0]; else yeni[c.k] = v[c.k] + (+b.dataset.d) * (c.step || 1);
+    v = ZM.customValues(id, yeni); S.ozel[id] = v; save(); beep(520, .04); ciz();
+  });
+  ciz();
+  $('#go').onclick = async () => { $('#go').disabled = true; if (await geriSay(g)) runGame(id, null, null, 'ozel:' + kaynak, ZM.customParams(id, v)); };
+}
+
+function ozelSonuc(id, stars, detail, from, P) {
+  const g = GAMES[id], gecti = stars > 0;
+  S.hist.push({ g: id, s: stars, oz: 1, d: dayKey(), t: Date.now() }); // bölüm ilerlemesine yazılmaz; gün (seri) sayılır
+  if (S.hist.length > 2000) S.hist = S.hist.slice(-2000);
+  save();
+  if (gecti) buzz([30, 40, 30]);
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">${g.name}</span></div>
+  <div class="result">
+    ${yildizHTML(stars, 'buyuk')}
+    <h2 style="font-size:28px">${gecti ? 'Serbest bölüm tamam!' : 'Serbest bölüm'}</h2>
+    <p class="verdict">${['Bu sefer olmadı. Ayarı biraz hafifletip yine dene.', 'Geçtin! Tekrar oynarsan yıldız toplarsın.', 'Çok iyi! Bir yıldız daha kapabilirsin.', 'Kusursuz! İstersen yoğunluğu artır.'][stars]}</p>
+    <p class="detail">${detail}</p>
+    <p class="detail">${g.ozet(P)}</p>
+  </div>
+  <button class="btn" id="again">Aynı ayarla tekrar</button>
+  <button class="link" id="ayar">Ayarları değiştir</button>`);
+  if (stars === 3) konfeti();
+  $('#x').onclick = () => geriDon(id, from);
+  $('#ayar').onclick = () => geriDon(id, from);
+  $('#again').onclick = async () => { $('#again').disabled = true; if (await geriSay(g)) runGame(id, null, null, from, P); };
 }
 
 function dailySummary(ids, k = dayKey()) {

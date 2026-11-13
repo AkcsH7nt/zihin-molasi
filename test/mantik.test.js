@@ -343,3 +343,81 @@ test('esCols: kart sayısına göre sütun', () => {
 test('loadState: bölüm kaydı varsayılanı boş nesne', () => {
   assert.deepEqual(ZM.loadState({ hist: [] }).bolum, {});
 });
+
+// ---- Serbest Bölüm (Kendin kur) ----
+test('Serbest Bölüm: her oyunun en az 2 ayarı var, varsayılanlar sınır içinde', () => {
+  for (const id of OYUNLAR) {
+    const spec = ZM.OZEL[id];
+    assert.ok(spec.length >= 2 || id === 'es', id);
+    const v = ZM.customValues(id, undefined);
+    for (const c of spec) {
+      if (c.sec) assert.ok(c.sec.some(([val]) => val === v[c.k]), `${id}.${c.k}`);
+      else assert.ok(v[c.k] >= c.min && v[c.k] <= c.max, `${id}.${c.k}`);
+    }
+  }
+});
+
+test('Serbest Bölüm: üretilen ayarlar normal bölümlerle aynı alanlara sahip', () => {
+  for (const id of OYUNLAR) {
+    const P = ZM.customParams(id, ZM.customValues(id));
+    assert.deepEqual(Object.keys(P).sort(), Object.keys(ZM.levelParams(id, 1)).sort(), id);
+  }
+});
+
+test('Serbest Bölüm: sınır dışı ve bozuk değerler sınıra çekilir', () => {
+  assert.equal(ZM.customValues('es', { pairs: 99 }).pairs, 18);
+  assert.equal(ZM.customValues('es', { pairs: -4 }).pairs, 3);
+  assert.equal(ZM.customValues('es', { pairs: 'abc' }).pairs, ZM.customValues('es').pairs);
+  assert.equal(ZM.customValues('renk', { items: 13 }).items % 2, 0);
+  assert.equal(ZM.customValues('goz', { positions: 9 }).positions, 8);
+  assert.equal(ZM.customValues('goz', { ms: 500 }).ms, 500);
+});
+
+test('Serbest Bölüm: Sıra Hafızası sırası tahtaya sığacak kadar olur', () => {
+  const v = ZM.customValues('sira', { len: 10, grid: 3, rounds: 2 });
+  assert.equal(v.len, 8);
+  assert.equal(ZM.customParams('sira', v).len, 8);
+  assert.equal(ZM.customValues('sira', { len: 10, grid: 4 }).len, 10);
+});
+
+test('Serbest Bölüm: Eşini Bul hamle hakkı 2 yıldız eşiğinden geniş', () => {
+  for (let p = 3; p <= 18; p++) {
+    const P = ZM.customParams('es', { pairs: p });
+    assert.equal(P.pairs, p);
+    assert.ok(P.maxMoves >= Math.ceil(p * 2.2));
+    assert.equal(ZM.rate('es', P, { done: true, moves: p }), 3);
+  }
+});
+
+test('Serbest Bölüm: Hızlı Hesap çarpmada 2 sayı, en fazla 2 basamak × 1 basamak', () => {
+  const P = ZM.customParams('hesap', { ops: 'x', digits: 3, terms: 4, questions: 7 });
+  assert.deepEqual(P.d, [2, 1]);
+  assert.equal(P.ops, 'x');
+  assert.equal(P.questions, 7);
+  assert.equal(P.time, 7 * P.sec);
+  const T = ZM.customParams('hesap', { ops: '+-', digits: 3, terms: 4, questions: 5 });
+  assert.deepEqual(T.d, [3, 3, 3, 3]);
+});
+
+test('Serbest Bölüm: her Hızlı Hesap ayarında sorular geçerli', () => {
+  for (const ops of ['+-', 'x']) for (let digits = 1; digits <= 3; digits++) for (let terms = 2; terms <= 4; terms++) {
+    const P = ZM.customParams('hesap', { ops, digits, terms, questions: 5 });
+    for (let k = 0; k < 40; k++) {
+      const q = ZM.hesapSoru(P);
+      assert.ok(Number.isInteger(q.v) && q.v >= 0, q.text);
+      assert.equal(q.text.split(/ [+−×] /).length, P.d.length, q.text);
+    }
+  }
+});
+
+test('Serbest Bölüm: Renk Tuzağı ve Saray türetilen alanlar', () => {
+  const R = ZM.customParams('renk', { items: 30, colors: 6, degis: 0 });
+  assert.equal(R.switchP, 0); assert.equal(R.items, 30); assert.equal(R.colors, 6); assert.equal(R.maxWrong, 6);
+  assert.ok(ZM.customParams('renk', { degis: 1 }).switchP > 0);
+  assert.equal(ZM.customParams('saray', { size: 16, sn: 3 }).studyMs, 3000);
+  assert.equal(ZM.customParams('goz', { positions: 12 }).animals, 6);
+});
+
+test('loadState: serbest bölüm ayarları varsayılanı boş nesne', () => {
+  assert.deepEqual(ZM.loadState({ hist: [] }).ozel, {});
+});
