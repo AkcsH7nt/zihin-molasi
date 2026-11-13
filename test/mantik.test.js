@@ -55,3 +55,32 @@ test('startLevel: kayıt yoksa en alttan, varsa bir tık aşağıdan başlar', (
   assert.equal(ZM.startLevel(3, 3, 9), 3);
   assert.equal(ZM.startLevel(20, 1, 4), 4);
 });
+
+test('nbackSeq: istenen uzunlukta, 0..7 arası semboller', () => {
+  const s = ZM.nbackSeq(2, 17);
+  assert.equal(s.length, 17);
+  assert.ok(s.every(v => Number.isInteger(v) && v >= 0 && v <= 7));
+});
+
+test('nbackSeq: hedef oranı yaklaşık %30', () => {
+  let t = 0, c = 0;
+  for (let k = 0; k < 200; k++) {
+    const s = ZM.nbackSeq(2, 17), tg = ZM.nbackTargets(s, 2);
+    t += tg.filter(Boolean).length; c += s.length - 2;
+  }
+  const oran = t / c;
+  assert.ok(oran > 0.2 && oran < 0.4, 'oran ' + oran);
+});
+
+test('nbackTargets: n önceki ile aynıysa hedef', () => {
+  assert.deepEqual(ZM.nbackTargets([1, 2, 1, 3], 2), [false, false, true, false]);
+  assert.deepEqual(ZM.nbackTargets([5, 5, 4], 1), [false, true, false]);
+});
+
+test('nbackAdapt: başarıya göre n artar/azalır, 1..4 sınırında', () => {
+  assert.equal(ZM.nbackAdapt(1, 0.9), 2);
+  assert.equal(ZM.nbackAdapt(4, 0.95), 4);
+  assert.equal(ZM.nbackAdapt(1, 0.3), 1);
+  assert.equal(ZM.nbackAdapt(3, 0.4), 2);
+  assert.equal(ZM.nbackAdapt(2, 0.6), 2);
+});

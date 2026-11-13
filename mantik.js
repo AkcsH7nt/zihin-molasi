@@ -41,7 +41,22 @@
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const startLevel = (saved, min, max) => (saved == null ? min : clamp(saved - 1, min, max));
 
-  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, startLevel };
+  // n-back: 8 sembol (0..7); n'den sonraki konumların ~%30'u hedef.
+  function nbackSeq(n, len, rng = Math.random) {
+    const s = [];
+    for (let i = 0; i < len; i++) {
+      if (i >= n && rng() < 0.3) { s.push(s[i - n]); continue; }
+      let v, guard = 0;
+      do { v = Math.floor(rng() * 8); guard++; }
+      while (guard < 50 && ((i >= n && v === s[i - n]) || (i >= 1 && v === s[i - 1])));
+      s.push(v);
+    }
+    return s;
+  }
+  const nbackTargets = (seq, n) => seq.map((v, i) => i >= n && v === seq[i - n]);
+  const nbackAdapt = (n, acc) => clamp(acc >= 0.8 ? n + 1 : acc < 0.5 ? n - 1 : n, 1, 4);
+
+  const ZM = { dayKey, dayNum, streak, dailyGames, loadState, clamp, startLevel, nbackSeq, nbackTargets, nbackAdapt };
   g.ZM = Object.assign(g.ZM || {}, ZM);
   if (typeof module !== 'undefined' && module.exports) module.exports = g.ZM;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

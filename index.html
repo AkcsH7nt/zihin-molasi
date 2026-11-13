@@ -100,7 +100,8 @@ h1,h2,h3,p{margin:0}
 .progress{font-size:14px;color:var(--soft);font-weight:600}
 .count{position:fixed;inset:0;display:grid;place-items:center;font-size:120px;font-weight:800;color:var(--coral);
   background:color-mix(in srgb,var(--bg) 92%,transparent);z-index:10;animation:pop .55s ease-out}
-@keyframes pop{from{transform:scale(1.35);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes pop{from{transform:scale(1.12)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* Sıra Hafızası */
 .msg{text-align:center;font-size:22px;font-weight:700;min-height:30px;color:var(--soft)}
@@ -141,6 +142,15 @@ h1,h2,h3,p{margin:0}
   background-size:12px 12px;box-shadow:0 3px 0 #B98516}
 .c3 .f{background:var(--card);border:2px solid var(--line);transform:rotateY(180deg);font-size:34px}
 .c3.done .f{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--card))}
+
+/* İki Önce */
+.nb-card{width:200px;height:200px;margin:0 auto;border-radius:32px;background:var(--card);border:2px solid var(--line);
+  box-shadow:var(--shadow);display:grid;place-items:center}
+.nb-card.pop{animation:pop .18s ease-out}
+.nb-sym{font-size:110px;line-height:1;color:#3D7DD8}
+.nb-btn{background:#3D7DD8;box-shadow:0 4px 0 #2A5EA8;padding:22px}
+.nb-btn.ok{background:var(--ok);box-shadow:0 4px 0 #1F7442}
+.nb-btn.bad{background:var(--bad);box-shadow:0 4px 0 #A83232}
 
 /* sonuç */
 .result{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:16px}
@@ -222,6 +232,7 @@ const ICON = {
     `<rect x="${2 + (i % 3) * 7}" y="${2 + Math.floor(i / 3) * 7}" width="6" height="6" rx="1.6" opacity="${[0,4,8,5].includes(i) ? 1 : .35}"/>`).join('') + '</svg>',
   renk: '<svg viewBox="0 0 24 24"><text x="12" y="17.5" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor" font-family="system-ui,sans-serif">Aa</text></svg>',
   es: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="9" height="13" rx="2" transform="rotate(-8 7.5 11.5)"/><rect x="12" y="5" width="9" height="13" rx="2" opacity=".55" transform="rotate(8 16.5 11.5)"/></svg>',
+  iki: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6 5 12l6 6M19 6l-6 6 6 6"/></svg>',
   hesap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 3.5v7M3.5 7h7M14 7h6.5M15 15l5 5M20 15l-5 5M3.5 17.5h7"/></svg>',
 };
 
@@ -381,8 +392,63 @@ const GAMES = {
       return () => t.stop();
     }
   },
+
+  iki: {
+    name: 'İki Önce', skill: 'Çalışma belleği', color: '#3D7DD8', unit: 'puan', timed: false,
+    howto: 'Semboller tek tek gelecek. Ekrandaki sembol, <b>N adım önceki</b> sembolle aynıysa <b>Eşleşiyor!</b> düğmesine bas; değilse bekle. 1 önceden başlarsın, iyi gidersen 2 önce, 3 önce… Yaklaşık 1 dakika.',
+    bilim: 'Bu “n-back” görevi, çalışma belleği araştırmalarında en çok kullanılan testtir (Au ve ark., 2015).',
+    start(stage, api) {
+      const SYM = ['▲', '●', '■', '◆', '★', '♥', '✚', '☾'];
+      const BLOCKS = 2;
+      let alive = true, n = ZM.startLevel(S.lvl.iki, 1, 4), top = n, score = 0, pressed = false, cur = -1, hits = 0, fas = 0;
+      stage.innerHTML = '<div class="msg"></div><div class="nb-card"><span class="nb-sym"></span></div><button class="btn nb-btn">Eşleşiyor!</button>';
+      const M = $('.msg', stage), SY = $('.nb-sym', stage), CARD = $('.nb-card', stage), BTN = $('.nb-btn', stage);
+      let targets = [];
+      BTN.addEventListener('pointerdown', () => {
+        if (cur < 0 || pressed) return;
+        pressed = true;
+        const hit = targets[cur];
+        BTN.classList.add(hit ? 'ok' : 'bad');
+        if (hit) beep(700, .06); else { buzz(80); beep(160, .15, 'square'); }
+      });
+      async function run() {
+        for (let b = 0; b < BLOCKS && alive; b++) {
+          api.stat(`${n} önce · Blok ${b + 1}/${BLOCKS}`);
+          M.textContent = n === 1 ? 'Bir öncekiyle aynıysa bas' : `${n} önceki ile aynıysa bas`; M.className = 'msg go';
+          SY.textContent = ''; await sleep(1800);
+          const len = n + 12, seq = ZM.nbackSeq(n, len); targets = ZM.nbackTargets(seq, n);
+          let correct = 0, bh = 0, bfa = 0;
+          for (let i = 0; i < len && alive; i++) {
+            cur = i; pressed = false; BTN.classList.remove('ok', 'bad');
+            SY.textContent = SYM[seq[i]]; CARD.classList.remove('pop'); void CARD.offsetWidth; CARD.classList.add('pop');
+            await sleep(1700); if (!alive) return;
+            SY.textContent = ''; await sleep(500); if (!alive) return;
+            M.textContent = ''; M.className = 'msg';
+            if (i >= n) {
+              if (targets[i] === pressed) correct++;
+              if (targets[i] && pressed) bh++;
+              if (!targets[i] && pressed) bfa++;
+              if (targets[i] && !pressed) { M.textContent = 'Bir eşleşme kaçtı'; M.className = 'msg bad'; }
+            }
+          }
+          cur = -1; hits += bh; fas += bfa;
+          score += bh * n - bfa;
+          const acc = correct / (len - n), next = ZM.nbackAdapt(n, acc);
+          M.textContent = next > n ? `Harika! Şimdi ${next} önce.` : next < n ? `Biraz yavaşlayalım: ${next} önce.` : 'Aynı seviyede devam.';
+          M.className = 'msg ' + (next >= n ? 'ok' : 'bad');
+          top = Math.max(top, n); n = next;
+          await sleep(1600);
+        }
+        if (!alive) return;
+        alive = false; S.lvl.iki = n; // kazanılan seviye; sonraki oyun bir tık altından başlar
+        api.end(Math.max(0, score), `${hits} eşleşme yakaladın, ${fas} yanlış basış. En yüksek: ${top} önce.`);
+      }
+      run();
+      return () => { alive = false; };
+    }
+  },
 };
-const ORDER = ['sira', 'renk', 'es', 'hesap'];
+const ORDER = ['sira', 'renk', 'es', 'hesap', 'iki'];
 
 /* ---------- günün molası ---------- */
 const dailyGames = () => ZM.dailyGames(dayNum(), ORDER);
