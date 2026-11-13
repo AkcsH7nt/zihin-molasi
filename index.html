@@ -350,7 +350,7 @@ b,h1,h2,h3{font-weight:650}
 .yb-kucuk{flex:none;width:86px;border-radius:10px;background-size:100% 100%;border:2px solid var(--line);transition:width .2s}
 .yb-kucuk.buyuk{width:210px}
 .yb{display:grid;grid-template-columns:repeat(var(--c),1fr);gap:3px;margin:0 auto;max-width:100%}
-.yp{aspect-ratio:1;border-radius:8px;background-repeat:no-repeat;transition:transform .12s}
+.yp{aspect-ratio:var(--ar,1);border-radius:8px;background-repeat:no-repeat;transition:transform .12s}
 .yp.secili{outline:4px solid var(--coral);outline-offset:-2px;transform:scale(.93);z-index:1}
 .yb{touch-action:none}
 .yb.dolu{gap:2px}
@@ -903,8 +903,10 @@ const GAMES = {
     ozet: P => `${P.cols * P.rows} parça (${P.cols}×${P.rows}) · ${P.maxMoves} hamle hakkı`,
     hedef: P => `${Math.ceil(P.cols * P.rows * 1.2)} hamlede bitirirsen 3 yıldız.`,
     start(stage, api, P) {
-      const n = api.n, tohum = n ? n * 104729 : Math.floor(Math.random() * 1e9);
-      return yapbozOyunu(stage, api, P, buyukResim(P.cols, P.rows, tohum, n ? (n - 1) % 4 : rnd(4)), true);
+      // her oyunda farklı bir sahne: bir öncekiyle aynı resim üst üste gelmez
+      let tur; do tur = rnd(RESIMLER.length); while (tur === S.sonResim);
+      S.sonResim = tur; save();
+      return yapbozOyunu(stage, api, P, `resimler/${RESIMLER[tur]}.jpg`, true, 2 / 3);
     }
   },
 };
@@ -912,12 +914,14 @@ const ORDER = ['sira', 'renk', 'es', 'hesap', 'iki', 'goz'];
 const BULMACA = ['sudoku', 'kelime', 'yapboz', 'buyuk'];
 
 // İki yapbozun ortak oyun motoru. dolu = true ise tahta ekranı doldurur.
-function yapbozOyunu(stage, api, P, resimURL, dolu) {
+function yapbozOyunu(stage, api, P, resimURL, dolu, oran) { // oran: resmin en/boy oranı (verilirse parçalar resmi bozmadan böler)
   const N = P.cols * P.rows, arr = ZM.yapbozKaristir(N), resim = `url(${resimURL})`; // arr[konum] = parça numarası
   let sel = -1, surukle = -1, moves = 0, alive = true;
-  const kare = Math.max(22, Math.floor(Math.min(Math.min(innerWidth - 32, dolu ? 448 : 340) / P.cols, (innerHeight - (dolu ? 210 : 330)) / P.rows)));
-  stage.innerHTML = `<div class="yb-ust"><button class="yb-kucuk" style="aspect-ratio:${P.cols}/${P.rows}" aria-label="Resmi büyüt"></button><span>Resimdeki gibi olana kadar parçaların yerini değiştir. Resme dokunursan büyür.</span></div>
-    <div class="yb ${dolu ? 'dolu' : ''}" style="--c:${P.cols};width:${kare * P.cols}px">${arr.map((_, k) => `<button class="yp" data-k="${k}" aria-label="Parça ${k + 1}"></button>`).join('')}</div>`;
+  const enW = Math.min(innerWidth - 32, dolu ? 448 : 340), enH = innerHeight - (dolu ? 210 : 330);
+  const tahtaOran = oran || P.cols / P.rows; // tahtanın en/boy oranı
+  const genislik = Math.max(P.cols * 22, Math.floor(Math.min(enW, enH * tahtaOran)));
+  stage.innerHTML = `<div class="yb-ust"><button class="yb-kucuk" style="aspect-ratio:${tahtaOran}" aria-label="Resmi büyüt"></button><span>Resimdeki gibi olana kadar parçaların yerini değiştir. Resme dokunursan büyür.</span></div>
+    <div class="yb ${dolu ? 'dolu' : ''}" style="--c:${P.cols};--ar:${tahtaOran * P.rows / P.cols};width:${genislik}px">${arr.map((_, k) => `<button class="yp" data-k="${k}" aria-label="Parça ${k + 1}"></button>`).join('')}</div>`;
   if (dolu) stage.classList.add('sikisik');
   const KR = $('.yb-kucuk', stage);
   KR.style.backgroundImage = resim;
@@ -962,93 +966,8 @@ function yapbozOyunu(stage, api, P, resimURL, dolu) {
   return () => { alive = false; };
 }
 
-// Büyük Yapboz resimleri: tuvale çizilen sevimli sahneler. tur: 0 çayırda kediler, 1 dağ gölü, 2 gün batımı, 3 gece
-function buyukResim(cols, rows, tohum, tur) {
-  const r = ZM.rng(tohum), B = 90, W = cols * B, H = rows * B, u = Math.min(W, H) / 10;
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const x = cv.getContext('2d');
-  const R = (a, b) => a + r() * (b - a), sec = a => a[Math.floor(r() * a.length)];
-  const daire = (cx, cy, rad, renk) => { x.fillStyle = renk; x.beginPath(); x.arc(cx, cy, rad, 0, 7); x.fill(); };
-  const elips = (cx, cy, rx, ry, renk) => { x.fillStyle = renk; x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, 7); x.fill(); };
-  const gok = (y0, y1, c1, c2) => { const g = x.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, c1); g.addColorStop(1, c2); x.fillStyle = g; x.fillRect(0, y0, W, y1 - y0); };
-  const tepe = (y, amp, renk) => {
-    const f = R(0, 6), dalga = R(1.2, 2.4);
-    x.fillStyle = renk; x.beginPath(); x.moveTo(0, H); x.lineTo(0, y);
-    for (let i = 0; i <= W; i += 8) x.lineTo(i, y + Math.sin(i / W * Math.PI * dalga + f) * amp);
-    x.lineTo(W, H); x.fill();
-  };
-  const bulut = (cx, cy, s, renk = 'rgba(255,255,255,.93)') => { for (const [dx, dy, k] of [[0, 0, 1], [-.95, .25, .7], [.95, .2, .75], [.35, -.45, .7]]) daire(cx + dx * s, cy + dy * s, s * k, renk); };
-  const cicek = (cx, cy, s, renk) => { for (let i = 0; i < 5; i++) daire(cx + Math.cos(i * 1.257) * s, cy + Math.sin(i * 1.257) * s, s * .7, renk); daire(cx, cy, s * .6, '#FFE08A'); };
-  const cam = (cx, cy, s, renk) => { x.fillStyle = '#8A5A3C'; x.fillRect(cx - s * .1, cy, s * .2, s * .5); x.fillStyle = renk; for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(cx, cy - s * (1.3 - i * .35)); x.lineTo(cx - s * (.35 + i * .15), cy - s * (.6 - i * .35)); x.lineTo(cx + s * (.35 + i * .15), cy - s * (.6 - i * .35)); x.fill(); } };
-  const kus = (cx, cy, s, renk) => { x.strokeStyle = renk; x.lineWidth = s * .16; x.lineCap = 'round'; x.beginPath(); x.moveTo(cx - s, cy); x.quadraticCurveTo(cx - s * .5, cy - s * .7, cx, cy); x.quadraticCurveTo(cx + s * .5, cy - s * .7, cx + s, cy); x.stroke(); };
-  const kedi = (cx, cy, s, renk, gozRenk = '#3A2A2A') => { // oturan sevimli kedi; (cx, cy) kafanın merkezi
-    x.strokeStyle = renk; x.lineWidth = s * .3; x.lineCap = 'round'; x.beginPath(); x.moveTo(cx + s * .7, cy + s * 1.6); x.quadraticCurveTo(cx + s * 1.8, cy + s * 1.5, cx + s * 1.5, cy + s * .5); x.stroke();
-    elips(cx, cy + s * 1.0, s * .9, s * 1.0, renk);
-    for (const d of [-1, 1]) {
-      x.fillStyle = renk; x.beginPath(); x.moveTo(cx + d * s * .9, cy - s * .3); x.lineTo(cx + d * s * .78, cy - s * 1.3); x.lineTo(cx + d * s * .15, cy - s * .8); x.fill();
-      x.fillStyle = '#FFB3C1'; x.beginPath(); x.moveTo(cx + d * s * .74, cy - s * .5); x.lineTo(cx + d * s * .7, cy - s * 1.02); x.lineTo(cx + d * s * .38, cy - s * .76); x.fill();
-    }
-    daire(cx, cy, s, renk);
-    elips(cx, cy + s * 1.2, s * .45, s * .6, 'rgba(255,255,255,.7)');
-    for (const d of [-1, 1]) { daire(cx + d * s * .42, cy - s * .05, s * .2, gozRenk); daire(cx + d * s * .42 + s * .06, cy - s * .12, s * .07, '#fff'); daire(cx + d * s * .66, cy + s * .3, s * .17, 'rgba(255,130,155,.5)'); }
-    x.fillStyle = '#FF8FA3'; x.beginPath(); x.moveTo(cx - s * .1, cy + s * .2); x.lineTo(cx + s * .1, cy + s * .2); x.lineTo(cx, cy + s * .33); x.fill();
-    x.strokeStyle = '#3A2A2A'; x.lineWidth = s * .05; x.beginPath(); x.moveTo(cx, cy + s * .33); x.quadraticCurveTo(cx - s * .12, cy + s * .52, cx - s * .27, cy + s * .42); x.moveTo(cx, cy + s * .33); x.quadraticCurveTo(cx + s * .12, cy + s * .52, cx + s * .27, cy + s * .42); x.stroke();
-    x.lineWidth = s * .035; for (const d of [-1, 1]) for (const e of [-.08, .1]) { x.beginPath(); x.moveTo(cx + d * s * .55, cy + s * (.3 + e)); x.lineTo(cx + d * s * 1.3, cy + s * (.24 + e * 2.4)); x.stroke(); }
-  };
-  const KEDI = ['#F6A65A', '#B9B4C7', '#F3D9B1', '#8E7A99', '#FFFFFF', '#E8946A'];
-  const ufuk = H * R(.5, .6);
-
-  if (tur === 0) { // çayırda kediler
-    gok(0, H, '#AEE0FF', '#FFF4D9'); daire(W * R(.15, .85), H * .12, u * 1.3, '#FFE27A');
-    for (let i = 0; i < 5; i++) bulut(R(0, W), R(H * .05, ufuk * .75), u * R(.55, 1));
-    tepe(ufuk, u * .9, '#BFE8A8'); tepe(ufuk + u * 1.6, u * .7, '#9EDB8C'); tepe(ufuk + u * 3.4, u * .5, '#83CF7C');
-    for (let i = 0; i < cols * rows; i++) cicek(R(0, W), R(ufuk + u, H), u * R(.12, .2), sec(['#FF9EB5', '#FFFFFF', '#C3A8F5', '#FFB86B', '#8FC9FF']));
-    const k = 2 + (cols > 4 ? 1 : 0);
-    for (let i = 0; i < k; i++) kedi(W * (i + .6) / (k + .2) + R(-u, u) * .3, ufuk + u * R(1.2, 3) + (H - ufuk) * .15, u * R(.95, 1.35), KEDI[(Math.floor(r() * 6) + i) % 6]);
-  } else if (tur === 1) { // dağ gölü
-    gok(0, ufuk, '#8FD0FF', '#FFE3EC');
-    for (let i = 0; i < 4; i++) bulut(R(0, W), R(H * .04, ufuk * .5), u * R(.5, .9));
-    for (let i = 0; i < 4; i++) { const mx = W * (i + .5) / 4 + R(-u, u), mh = u * R(2.6, 4.4), mw = u * R(2.4, 3.6); x.fillStyle = sec(['#8FA7D9', '#9C8FD0', '#7FB3C9']); x.beginPath(); x.moveTo(mx - mw, ufuk); x.lineTo(mx, ufuk - mh); x.lineTo(mx + mw, ufuk); x.fill(); x.fillStyle = '#fff'; x.beginPath(); x.moveTo(mx - mw * .28, ufuk - mh * .72); x.lineTo(mx, ufuk - mh); x.lineTo(mx + mw * .28, ufuk - mh * .72); x.lineTo(mx + mw * .1, ufuk - mh * .62); x.lineTo(mx - mw * .06, ufuk - mh * .7); x.fill(); }
-    gok(ufuk, H, '#6FC3E8', '#BDEBFF');
-    x.globalAlpha = .35; for (let i = 0; i < rows * 3; i++) { x.fillStyle = '#fff'; x.fillRect(R(0, W), R(ufuk + u * .3, H * .86), u * R(.6, 1.8), u * .07); } x.globalAlpha = 1;
-    tepe(H * .86, u * .4, '#8FD694');
-    for (let i = 0; i < cols + 2; i++) cam(R(0, W), H * R(.84, .93), u * R(.9, 1.5), sec(['#3F9E6B', '#2F8A5F', '#57B37A']));
-    for (let i = 0; i < 4; i++) kus(R(0, W), R(H * .06, ufuk * .7), u * R(.25, .4), '#5B6B8A');
-    kedi(W * R(.25, .75), H * .8, u * 1.15, sec(KEDI));
-    x.fillStyle = '#C98A5E'; x.beginPath(); x.moveTo(W * .1, ufuk + u * 1.2); x.lineTo(W * .32, ufuk + u * 1.2); x.lineTo(W * .28, ufuk + u * 1.6); x.lineTo(W * .14, ufuk + u * 1.6); x.fill();
-    x.fillStyle = '#fff'; x.beginPath(); x.moveTo(W * .21, ufuk + u * 1.2); x.lineTo(W * .21, ufuk - u * .3); x.lineTo(W * .31, ufuk + u * 1.05); x.fill();
-  } else if (tur === 2) { // gün batımında deniz
-    gok(0, ufuk, '#FF8E72', '#FFD79A'); daire(W * R(.3, .7), ufuk, u * 1.9, '#FFF1B8');
-    for (let i = 0; i < 4; i++) bulut(R(0, W), R(H * .05, ufuk * .6), u * R(.5, .95), 'rgba(255,225,215,.85)');
-    gok(ufuk, H, '#7A6BC9', '#3F5FA8');
-    x.globalAlpha = .5; for (let i = 0; i < rows * 4; i++) { x.fillStyle = sec(['#FFE9B8', '#FFB89A', '#C9C0FF']); x.fillRect(R(0, W), R(ufuk + u * .2, H), u * R(.5, 2), u * .08); } x.globalAlpha = 1;
-    for (let i = 0; i < 5; i++) kus(R(0, W), R(H * .05, ufuk * .8), u * R(.25, .45), '#7A3B4E');
-    for (const [px, s] of [[R(.12, .3), 1], [R(.65, .88), .75]]) { x.fillStyle = '#5A3A4A'; x.beginPath(); x.moveTo(W * px - u * s, ufuk + u * 1.5 * s); x.lineTo(W * px + u * s, ufuk + u * 1.5 * s); x.lineTo(W * px + u * .7 * s, ufuk + u * 1.9 * s); x.lineTo(W * px - u * .7 * s, ufuk + u * 1.9 * s); x.fill(); x.fillStyle = '#FFF6E6'; x.beginPath(); x.moveTo(W * px, ufuk + u * 1.5 * s); x.lineTo(W * px, ufuk - u * .4 * s); x.lineTo(W * px + u * .9 * s, ufuk + u * 1.3 * s); x.fill(); }
-    x.fillStyle = '#8A5A3C'; x.fillRect(0, H * .88, W, H * .12); x.fillStyle = '#6E452D'; for (let i = 0; i < cols * 2; i++) x.fillRect(i * W / (cols * 2), H * .88, 3, H * .12);
-    kedi(W * R(.3, .5), H * .74, u * 1.2, '#F6A65A'); kedi(W * R(.62, .8), H * .77, u * .95, '#F3D9B1');
-  } else { // gece
-    gok(0, H, '#232A63', '#6A4F93'); daire(W * R(.2, .8), H * .14, u * 1.4, '#FFF3C4'); daire(W * .5 + u * R(-3, 3), H * .11, u * .25, 'rgba(255,255,255,.0)');
-    for (let i = 0; i < cols * rows * 2; i++) daire(R(0, W), R(0, H * .7), u * R(.03, .09), sec(['#fff', '#FFE9A8', '#C9D6FF']));
-    tepe(H * .7, u * .8, '#3D3A78'); tepe(H * .8, u * .5, '#2F2D63');
-    const ex = W * R(.15, .4), ey = H * .62, ew = u * 3.2, eh = u * 2.4;
-    x.fillStyle = '#4B4A8F'; x.fillRect(ex, ey, ew, eh); x.fillStyle = '#C96A7A'; x.beginPath(); x.moveTo(ex - u * .4, ey); x.lineTo(ex + ew / 2, ey - u * 1.6); x.lineTo(ex + ew + u * .4, ey); x.fill();
-    for (const [dx, dy] of [[.18, .25], [.6, .25], [.18, .65]]) { x.fillStyle = '#FFE27A'; x.fillRect(ex + ew * dx, ey + eh * dy, ew * .22, eh * .24); }
-    x.fillStyle = '#7A4B3A'; x.fillRect(ex + ew * .62, ey + eh * .58, ew * .2, eh * .42);
-    for (let i = 0; i < cols; i++) cam(R(0, W), H * R(.8, .93), u * R(.9, 1.4), sec(['#27406B', '#2F4F7A']));
-    for (let i = 0; i < cols * 2; i++) daire(R(0, W), R(H * .55, H * .95), u * .08, 'rgba(255,240,150,.9)');
-    kedi(W * R(.62, .8), H * .76, u * 1.25, '#8E7A99', '#FFE27A');
-  }
-  // her parçada ayırt edici küçük bir ayrıntı (boş gökyüzü parçaları birbirine karışmasın)
-  x.globalAlpha = .75;
-  for (let cy = 0; cy < rows; cy++) for (let cx = 0; cx < cols; cx++) {
-    const px = cx * B + R(18, B - 18), py = cy * B + R(18, B - 18), renk = sec(['#fff', '#FFE08A', '#FFB3C1', '#C9D6FF', '#B9EBD8']), s = B * R(.05, .09);
-    x.fillStyle = renk; x.beginPath();
-    for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? s * .45 : s * 1.3; x.lineTo(px + Math.cos(a) * rr, py + Math.sin(a) * rr); }
-    x.fill();
-  }
-  x.globalAlpha = 1;
-  return cv.toDataURL('image/jpeg', .9);
-}
+// Büyük Yapboz resimleri: ChatGPT görsel üreticisiyle hazırlanmış 5 görsel (2:3 dikey)
+const RESIMLER = ['kedi-cayir', 'kedi-pencere', 'dag-golu', 'sahil-kasabasi', 'karli-koy'];
 
 // Yapboz resmi: bölüm numarasına göre hep aynı çıkan renkli bir sahne (tuvale çizilir; her parçada ayırt edici bir şey olur)
 function sahneResmi(cols, rows, tohum) {
