@@ -1,5 +1,5 @@
 // Zihin Molası — çevrimdışı çalışma. Dosya değişince SURUM'u artır.
-const SURUM = 'zm-2';
+const SURUM = 'zm-3';
 const DOSYALAR = ['./', 'index.html', 'mantik.js', 'kelimeler.js','manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -12,14 +12,14 @@ self.addEventListener('activate', e => {
     .then(() => self.clients.claim()));
 });
 
+// Önce internet (sayfa ve betikler hep birlikte güncel kalsın), yoksa kayıtlı kopya.
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  if (e.request.mode === 'navigate') {
-    // sayfa: önce internet (güncel sürüm), yoksa kayıtlı kopya
-    e.respondWith(fetch(e.request)
-      .then(r => { const k = r.clone(); caches.open(SURUM).then(c => c.put('index.html', k)); return r; })
-      .catch(() => caches.match('index.html')));
-    return;
-  }
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  const nav = e.request.mode === 'navigate';
+  e.respondWith(fetch(e.request)
+    .then(r => {
+      if (r.ok) { const k = r.clone(); caches.open(SURUM).then(c => c.put(nav ? 'index.html' : e.request, k)); }
+      return r;
+    })
+    .catch(() => caches.match(nav ? 'index.html' : e.request, { ignoreSearch: true })));
 });

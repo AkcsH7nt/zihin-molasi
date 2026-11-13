@@ -186,6 +186,12 @@ h1,h2,h3,p{margin:0}
 .bilim{font-size:14px!important;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-align:left}
 .saray-card{display:flex;align-items:center;gap:14px;margin-bottom:22px;text-align:left;width:100%}
 
+/* Bilim sayfası */
+.bilimlist{display:flex;flex-direction:column;gap:10px;padding-bottom:10px}
+.bilimlist b{font-size:17px}
+.bilimlist p{color:var(--soft);font-size:15px;line-height:1.45;margin:6px 0 8px}
+.bilimlist a{color:var(--teal);font-size:13px;font-weight:600;text-decoration:none}
+
 /* sonuç */
 .result{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:16px}
 .result .big{font-size:84px;font-weight:850;line-height:1;font-variant-numeric:tabular-nums}
@@ -281,6 +287,7 @@ const GAMES = {
   sira: {
     name: 'Sıra Hafızası', skill: 'Hafıza', color: '#F26B5B', unit: 'kare', timed: false,
     howto: 'Kareler sırayla yanacak. <b>İzle</b>, sonra <b>aynı sırayla</b> dokun. Her doğru turda sıra bir kare uzar. <b>2 hata</b> hakkın var.',
+    bilim: 'Araştırmacıların kısa süreli görsel belleği ölçmek için kullandığı “Corsi blokları” görevinin bir türüdür.',
     start(stage, api) {
       let alive = true, len = ZM.startLevel(S.lvl.sira, 3, 9), best = 0, lives = 2, seq = [], idx = 0, accept = false;
       stage.innerHTML = '<div class="msg">İzle…</div><div class="grid9">' +
@@ -324,6 +331,7 @@ const GAMES = {
   renk: {
     name: 'Renk Tuzağı', skill: 'Dikkat', color: '#7B5EA7', unit: 'puan', timed: true, secs: 40,
     howto: 'Bir renk adı çıkacak ama çoğu zaman <b>başka renkle</b> yazılmış olacak. Üstteki kural ne diyorsa ona dokun: yazının <b>RENGİ</b> mi, <b>ANLAMI</b> mı? Kural ara sıra değişir. 40 saniye.',
+    bilim: 'Stroop etkisi: beyin yazıyı otomatik okur; rengi söylemek için bu alışkanlığı bastırman gerekir. Kural değişimi zihinsel esnekliği de zorlar.',
     start(stage, api) {
       const C = [{ n: 'KIRMIZI', c: '#E5484D' }, { n: 'MAVİ', c: '#3B82F6' }, { n: 'YEŞİL', c: '#22A05A' }, { n: 'MOR', c: '#9B59D0' }];
       let score = 0, ok = 0, bad = 0, trial = 0, rule = 'renk', cur;
@@ -359,6 +367,7 @@ const GAMES = {
   es: {
     name: 'Eşini Bul', skill: 'Görsel hafıza', color: '#E0A526', unit: 'puan', timed: false,
     howto: 'Kartları ikişer ikişer aç ve eşlerini bul. Gördüğün kartların yerini aklında tut: <b>ne kadar az hamle</b> ve <b>ne kadar hızlı</b>, o kadar çok puan.',
+    bilim: 'Nesnelerin yerini aklında tutmak, görsel-mekânsal hafızayı çalıştırır.',
     start(stage, api) {
       const sym = shuffle(['🍎', '🐟', '🌙', '⭐', '🌵', '🎈', '🍋', '🦋', '🍄', '🐢', '🌻', '☂️']).slice(0, 8);
       const deck = shuffle([...sym, ...sym]);
@@ -395,6 +404,7 @@ const GAMES = {
   hesap: {
     name: 'Hızlı Hesap', skill: 'Hız', color: '#2A9D8F', unit: 'doğru', timed: true, secs: 45,
     howto: 'İşlemler gelecek, <b>doğru sonuca</b> dokun. Üst üste doğru yaptıkça sorular zorlaşır, yanlışta biraz kolaylaşır. 45 saniye.',
+    bilim: 'Zihinden hızlı işlem, işlem hızını ve çalışma belleğini birlikte zorlar. Zorluk sana göre ayarlanır; zorlayıcı olan iş yarar (Park ve ark., 2014).',
     start(stage, api) {
       let ok = 0, bad = 0, lvl = ZM.startLevel(S.lvl.hesap, 1, 4), top = lvl, run = 0, ans;
       stage.innerHTML = '<div class="lvl"></div><div class="q"></div><div class="choices4"></div><div class="fb"></div>';
@@ -703,11 +713,13 @@ function renderHome() {
         <span class="gbest">${b == null ? 'Yeni' : `rekor<b>${b}</b>`}${spark(id)}</span>
       </button>`; }).join('')}
     </div>
+    <button class="btn ghost" id="bilim" style="margin-top:22px">🔬 Bilim ne diyor?</button>
     <p class="foot">Zihin Molası eğlence için hazırlanmış kısa beyin egzersizleridir;<br>tıbbi bir tedavi yerine geçmez. · Prototip</p>
   </div>`;
   $('#snd').onclick = () => { S.sound = !S.sound; save(); if (S.sound) beep(660, .1); renderHome(); };
   $('#startDaily').onclick = () => { enterSub(); startDaily(dg); };
   app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { enterSub(); playGame(b.dataset.g, null); });
+  $('#bilim').onclick = () => { enterSub(); bilimPage(); };
   $('#saray').onclick = () => { enterSub(); if (S.lvl.saray == null) sarayDers(() => playGame('saray', null)); else playGame('saray', null); };
   const hide = $('#hideInst'); if (hide) hide.onclick = () => { S.hideInstall = true; save(); renderHome(); };
   const inst = $('#inst'); if (inst) inst.onclick = async () => { deferredPrompt.prompt(); try { await deferredPrompt.userChoice; } catch (e) {} deferredPrompt = null; renderHome(); };
@@ -811,6 +823,26 @@ function dailySummary(ids) {
   </div>
   <button class="btn" id="home">Ana sayfa</button>`);
   $('#home').onclick = backHome;
+}
+
+/* ---------- Bilim ne diyor? ---------- */
+const BILIM = [
+  ['Oyunda gelişirsin, ama dürüst olalım', 'Beyin oyunları, oynanan oyundaki beceriyi kesin geliştirir. Bunun günlük hayata ne kadar taşındığı ise araştırmalarda sınırlı bulunmuştur. Bu yüzden biz “IQ artırır” demiyoruz.', 'Simons ve ark., 2016', 'https://www.psychologicalscience.org/?p=126532'],
+  ['Gerçek hafızaya en çok teknik yarar', 'Hafıza Sarayı tekniğini 6 hafta çalışan sıradan kişiler, hafıza şampiyonlarına yakın sonuç aldı ve 4 ay sonra da korudu.', 'Dresler ve ark., Neuron 2017', 'https://med.stanford.edu/news/all-news/2017/03/memorization-tool-bulks-up-brains-internal-connections.html'],
+  ['Hatırlamaya çalışmak, tekrar okumaktan iyidir', 'Bilgiyi geri çağırmaya çalışmak ve tekrarları günlere yaymak, öğrenme biliminin en sağlam iki bulgusudur. Günün Kelimeleri bu yüzden ertesi gün de soruluyor.', 'Roediger ve Karpicke, 2006; Cepeda ve ark., 2006', 'https://pubmed.ncbi.nlm.nih.gov/16719566/'],
+  ['Algı hızı', 'Algı hızı antrenmanı, uzun vadeli etkisi en çok araştırılan egzersizlerdendir. Çalışma yaşlılarda yapılmıştır; Göz Ucu bu fikirden esinlenir.', 'ACTIVE çalışması, Edwards ve ark., 2017', 'https://www.sciencedaily.com/releases/2017/11/171116104955.htm'],
+  ['Mola gerçekten iyi gelir', 'Kısa molalar enerjiyi artırıp yorgunluğu azaltıyor. Kısa nefes/farkındalık çalışmaları dikkati destekleyebiliyor.', 'Albulescu ve ark., 2022; Zeidan ve ark., 2010', 'https://www.sciencedaily.com/releases/2022/08/220831152754.htm'],
+  ['Bir gün kaçırmak dert değil', 'Alışkanlık ortalama 2 ay sürer ve tek bir boş gün onu bozmaz. Serinde haftada 1 boş gün bu yüzden affediliyor.', 'Lally ve ark., 2010', 'https://www.ucl.ac.uk/news/2009/aug/how-long-does-it-take-form-habit'],
+  ['Beyne iyi gelen 3 şey ekranın dışında', 'Hareket (merdiveni kullan, kısa yürüyüş), iyi uyku (öğrendiklerini kalıcı yapar) ve yeni, zorlayıcı bir şey öğrenmek.', 'Chang ve ark., 2012; Rasch ve Born, 2013; Park ve ark., 2014', 'https://pmc.ncbi.nlm.nih.gov/articles/3768102'],
+];
+function bilimPage() {
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">Bilim ne diyor?</span></div>
+  <div class="bilimlist">${BILIM.map(([t, p, k, u]) => `
+    <div class="card"><b>${t}</b><p>${p}</p><a href="${u}" target="_blank" rel="noopener">${k} ↗</a></div>`).join('')}
+    <p class="foot">Zihin Molası bir oyundur; tıbbi bir tedavi ya da teşhis aracı değildir.</p>
+  </div>`);
+  $('#x').onclick = backHome;
 }
 
 /* ---------- Günün Kelimeleri ---------- */
