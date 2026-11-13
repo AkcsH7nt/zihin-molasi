@@ -189,7 +189,7 @@ test('shareText: seri ve adres içerir, skor içermez', () => {
 });
 
 // ---- 3. tur: bölümler (her oyunda 100 bölüm) ----
-const OYUNLAR = ['sira', 'renk', 'es', 'hesap', 'iki', 'goz', 'saray', 'sudoku', 'kelime', 'yapboz'];
+const OYUNLAR = ['sira', 'renk', 'es', 'hesap', 'iki', 'goz', 'saray', 'sudoku', 'kelime', 'yapboz', 'buyuk'];
 
 test('levelParams: her oyunda 1..100 arası her bölüm için sayısal değerler üretir', () => {
   for (const id of OYUNLAR) for (let n = 1; n <= 100; n++) {
@@ -566,4 +566,30 @@ test('rng: aynı tohum aynı diziyi verir', () => {
   assert.deepEqual(x, y);
   assert.notEqual(x[0], c());
   assert.ok(x.every(v => v >= 0 && v < 1));
+});
+
+test('Büyük Yapboz bölümleri: dikey ekran düzeni, 12 parçadan 88 parçaya, hiç azalmaz', () => {
+  const ilk = ZM.levelParams('buyuk', 1), son = ZM.levelParams('buyuk', 100);
+  assert.equal(ilk.cols * ilk.rows, 12);
+  assert.equal(son.cols * son.rows, 88);
+  let once = 0;
+  for (let n = 1; n <= 100; n++) {
+    const P = ZM.levelParams('buyuk', n), N = P.cols * P.rows;
+    assert.ok(P.rows > P.cols, 'dikey');
+    assert.ok(N >= once); once = N;
+    assert.ok(P.maxMoves >= Math.ceil(N * 1.7));
+  }
+});
+
+test('rate: Büyük Yapboz, Yapboz ile aynı hamle kuralını kullanır', () => {
+  const P = ZM.levelParams('buyuk', 1);
+  assert.equal(ZM.rate('buyuk', P, { done: true, moves: 11 }), 3);
+  assert.equal(ZM.rate('buyuk', P, { done: true, moves: P.maxMoves }), 1);
+  assert.equal(ZM.rate('buyuk', P, { done: false, moves: 3 }), 0);
+});
+
+test('Serbest Bölüm: Büyük Yapboz 3×4 ile 8×12 arası kurulabilir', () => {
+  assert.deepEqual(ZM.customParams('buyuk', { cols: 99, rows: 99 }), { cols: 8, rows: 12, maxMoves: Math.ceil(96 * 2.4) });
+  const v = ZM.customParams('buyuk', { cols: 1, rows: 1 });
+  assert.equal(v.cols, 3); assert.equal(v.rows, 4);
 });

@@ -137,6 +137,10 @@
         const n = [6, 6, 7, 7, 8, 8, 9, 9, 10, 10][t], words = Math.min(10, 3 + Math.floor(s / 2) + Math.floor(t / 3));
         return { n, words, dirs: t < 3 ? 2 : t < 6 ? 3 : t < 8 ? 4 : 8, time: words * 25 + n * 5 };
       }
+      case 'buyuk': { // telefon ekranını dolduran dikey düzen
+        const [cols, rows] = [[3, 4], [3, 5], [4, 5], [4, 6], [5, 7], [5, 8], [6, 8], [6, 9], [7, 10], [8, 11]][t], N = cols * rows;
+        return { cols, rows, maxMoves: Math.ceil(N * (2.6 - 0.06 * s)) };
+      }
       case 'yapboz': {
         const [cols, rows] = [[2, 3], [3, 3], [3, 4], [4, 4], [4, 5], [5, 5], [5, 6], [6, 6], [6, 7], [7, 7]][t], N = cols * rows;
         return { cols, rows, maxMoves: Math.ceil(N * (2.6 - 0.06 * s)) };
@@ -160,7 +164,7 @@
       case 'saray': return oran(o.acc, 0.7, 0.85, 1);
       case 'sudoku': return !o.done || o.mistakes > P.maxMistakes ? 0 : o.mistakes === 0 ? 3 : o.mistakes === 1 ? 2 : 1;
       case 'kelime': return !o.done ? 0 : o.left >= 0.5 ? 3 : o.left >= 0.25 ? 2 : 1;
-      case 'yapboz': { const N = P.cols * P.rows; return !o.done || o.moves > P.maxMoves ? 0 : o.moves <= Math.ceil(N * 1.2) ? 3 : o.moves <= Math.ceil(N * 1.7) ? 2 : 1; }
+      case 'yapboz': case 'buyuk': { const N = P.cols * P.rows; return !o.done || o.moves > P.maxMoves ? 0 : o.moves <= Math.ceil(N * 1.2) ? 3 : o.moves <= Math.ceil(N * 1.7) ? 2 : 1; }
     }
     return 0;
   }
@@ -325,6 +329,7 @@
     sudoku: [{ k: 'size', ad: 'Tablo', sec: [[4, '4×4'], [6, '6×6'], [9, '9×9']], def: 6 }, { k: 'bos', ad: 'Boş kutu', sec: [[0, 'Az'], [1, 'Orta'], [2, 'Çok']], def: 1 }],
     kelime: [{ k: 'n', ad: 'Tablo', min: 6, max: 10, def: 8, kare: true }, { k: 'words', ad: 'Kelime', min: 3, max: 10, def: 6 }, { k: 'dirs', ad: 'Yönler', sec: [[2, 'Düz'], [4, 'Çapraz'], [8, 'Ters de']], def: 2 }],
     yapboz: [{ k: 'cols', ad: 'Sütun', min: 2, max: 7, def: 4 }, { k: 'rows', ad: 'Satır', min: 2, max: 7, def: 4 }],
+    buyuk: [{ k: 'cols', ad: 'Sütun', min: 3, max: 8, def: 5 }, { k: 'rows', ad: 'Satır', min: 4, max: 12, def: 7 }],
   };
   // Kayıtlı/girilen değerleri sınırlara çeker; eksik ya da bozuk olanı varsayılana döndürür
   function customValues(id, raw) {
@@ -357,7 +362,7 @@
       case 'saray': return { size: v.size, studyMs: v.sn * 1000 };
       case 'sudoku': return { size: v.size, blanks: Math.round(v.size * v.size * [0.35, 0.5, 0.6][v.bos]), maxMistakes: 3 };
       case 'kelime': return { n: v.n, words: v.words, dirs: v.dirs, time: v.words * 25 + v.n * 5 };
-      case 'yapboz': return { cols: v.cols, rows: v.rows, maxMoves: Math.ceil(v.cols * v.rows * 2.4) };
+      case 'yapboz': case 'buyuk': return { cols: v.cols, rows: v.rows, maxMoves: Math.ceil(v.cols * v.rows * 2.4) };
     }
     return null;
   }
