@@ -49,13 +49,6 @@ test('loadState eski kayda varsayılan alanları ekler', () => {
   assert.deepEqual(s.daily, {});
 });
 
-test('startLevel: kayıt yoksa en alttan, varsa bir tık aşağıdan başlar', () => {
-  assert.equal(ZM.startLevel(undefined, 3, 9), 3);
-  assert.equal(ZM.startLevel(7, 3, 9), 6);
-  assert.equal(ZM.startLevel(3, 3, 9), 3);
-  assert.equal(ZM.startLevel(20, 1, 4), 4);
-});
-
 test('nbackSeq: istenen uzunlukta, 0..7 arası semboller', () => {
   const s = ZM.nbackSeq(2, 17);
   assert.equal(s.length, 17);
@@ -75,34 +68,6 @@ test('nbackSeq: hedef oranı yaklaşık %30', () => {
 test('nbackTargets: n önceki ile aynıysa hedef', () => {
   assert.deepEqual(ZM.nbackTargets([1, 2, 1, 3], 2), [false, false, true, false]);
   assert.deepEqual(ZM.nbackTargets([5, 5, 4], 1), [false, true, false]);
-});
-
-test('nbackAdapt: başarıya göre n artar/azalır, 1..4 sınırında', () => {
-  assert.equal(ZM.nbackAdapt(1, 0.9), 2);
-  assert.equal(ZM.nbackAdapt(4, 0.95), 4);
-  assert.equal(ZM.nbackAdapt(1, 0.3), 1);
-  assert.equal(ZM.nbackAdapt(3, 0.4), 2);
-  assert.equal(ZM.nbackAdapt(2, 0.6), 2);
-});
-
-test('gozAdapt: üst üste 2 doğruda süre %20 kısalır', () => {
-  assert.deepEqual(ZM.gozAdapt(300, true, 1), { ms: 240, run: 0 });
-  assert.deepEqual(ZM.gozAdapt(300, true, 0), { ms: 300, run: 1 });
-});
-
-test('gozAdapt: yanlışta süre %25 uzar', () => {
-  assert.deepEqual(ZM.gozAdapt(300, false, 1), { ms: 375, run: 0 });
-});
-
-test('gozAdapt: süre 50..600 ms arasında kalır', () => {
-  assert.equal(ZM.gozAdapt(55, true, 2).ms, 50);
-  assert.equal(ZM.gozAdapt(550, false, 0).ms, 600);
-});
-
-test('gozScore: yalnız doğrular puan alır, kısa süre daha çok', () => {
-  assert.equal(ZM.gozScore([{ ok: true, ms: 100 }, { ok: false, ms: 50 }]), 50);
-  assert.equal(ZM.gozScore([{ ok: true, ms: 600 }]), 1);
-  assert.equal(ZM.gozScore([]), 0);
 });
 
 const HAVUZ = Array.from({ length: 30 }, (_, i) => 'k' + i);
@@ -134,17 +99,6 @@ test('pendingRecall: dün zaten sorulduysa ya da kayıt yoksa null', () => {
   assert.equal(ZM.pendingRecall({ '2026-11-12': { w: ['a'], next: 3 } }, T), null);
   assert.equal(ZM.pendingRecall({ '2026-11-10': { w: ['a'] } }, T), null);
   assert.equal(ZM.pendingRecall({}, T), null);
-});
-
-test('Hafıza Sarayı: seviye 1 → 4 yer, seviye 7 → 10 yer', () => {
-  assert.equal(ZM.palaceSize(1), 4);
-  assert.equal(ZM.palaceSize(7), 10);
-  assert.equal(ZM.palaceSize(99), 10);
-});
-
-test('Hafıza Sarayı: en büyük seviyeye yetecek kadar yer var', () => {
-  assert.ok(ZM.YERLER.length >= ZM.palaceSize(7));
-  assert.equal(ZM.YERLER[0], 'Bina kapısı');
 });
 
 test('streak: dün boşsa ve bugün henüz oynanmadıysa seri bekler (affedilir)', () => {
@@ -226,24 +180,166 @@ test('mascot: bugün oynadı ama mola bitmedi → devam', () => {
   assert.deepEqual(ZM.mascot(durum({ playedToday: true, gap: 0 })), { mood: 'mutlu', key: 'devam' });
 });
 
-test('highlight: yeni rekor varsa günün yıldızı odur', () => {
-  const r = [{ id: 'a', s: 10, best: 20 }, { id: 'b', s: 31, best: 30 }, { id: 'c', s: 5, best: null }];
-  assert.deepEqual(ZM.highlight(r), { id: 'b', record: true });
-});
-
-test('highlight: rekor yoksa rekoruna en çok yaklaşılan oyun', () => {
-  const r = [{ id: 'a', s: 10, best: 20 }, { id: 'b', s: 27, best: 30 }];
-  assert.deepEqual(ZM.highlight(r), { id: 'b', record: false });
-});
-
-test('highlight: sonuç yoksa null', () => {
-  assert.equal(ZM.highlight([]), null);
-});
-
 test('shareText: seri ve adres içerir, skor içermez', () => {
   const t = ZM.shareText(4, 'https://ornek.test/');
   assert.ok(t.includes('4 gün'));
   assert.ok(t.includes('https://ornek.test/'));
   assert.ok(ZM.shareText(0, 'u').includes('u'));
   assert.ok(!ZM.shareText(0, 'u').includes('0 gün'));
+});
+
+// ---- 3. tur: bölümler (her oyunda 100 bölüm) ----
+const OYUNLAR = ['sira', 'renk', 'es', 'hesap', 'iki', 'goz', 'saray'];
+
+test('levelParams: her oyunda 1..100 arası her bölüm için sayısal değerler üretir', () => {
+  for (const id of OYUNLAR) for (let n = 1; n <= 100; n++) {
+    const P = ZM.levelParams(id, n);
+    assert.ok(P, id + ' ' + n);
+    for (const [k, v] of Object.entries(P)) if (typeof v === 'number') assert.ok(Number.isFinite(v) && v >= 0, `${id} ${n} ${k}=${v}`);
+  }
+});
+
+test('levelParams: sınır dışı bölüm numarası 1..100 aralığına çekilir', () => {
+  assert.deepEqual(ZM.levelParams('es', 0), ZM.levelParams('es', 1));
+  assert.deepEqual(ZM.levelParams('es', 250), ZM.levelParams('es', 100));
+});
+
+test('Eşini Bul: kart sayısı bölümle artar (3 çiftten 18 çifte), hiç azalmaz', () => {
+  assert.equal(ZM.levelParams('es', 1).pairs, 3);
+  assert.equal(ZM.levelParams('es', 100).pairs, 18);
+  for (let n = 2; n <= 100; n++) assert.ok(ZM.levelParams('es', n).pairs >= ZM.levelParams('es', n - 1).pairs);
+});
+
+test('Eşini Bul: hamle hakkı her zaman 2 yıldız eşiğinden geniştir', () => {
+  for (let n = 1; n <= 100; n++) { const P = ZM.levelParams('es', n); assert.ok(P.maxMoves >= Math.ceil(P.pairs * 2.2), 'bölüm ' + n); }
+});
+
+test('Sıra Hafızası: sıra uzar, tur artar, tahta büyür; sıra tahtaya sığar', () => {
+  assert.deepEqual(ZM.levelParams('sira', 1), { len: 3, grid: 3, rounds: 2, onMs: 620, maxMistakes: 2 });
+  const son = ZM.levelParams('sira', 100);
+  assert.equal(son.len, 9); assert.equal(son.grid, 5); assert.equal(son.rounds, 4);
+  for (let n = 1; n <= 100; n++) { const P = ZM.levelParams('sira', n); assert.ok(P.len < P.grid * P.grid && P.onMs >= 300); }
+});
+
+test('Hızlı Hesap: basamak ve işlem sayısı kademeyle artar, soru sayısı 6..15', () => {
+  assert.deepEqual(ZM.levelParams('hesap', 1).d, [1, 1]);
+  assert.deepEqual(ZM.levelParams('hesap', 25).d, [2, 2]);
+  assert.equal(ZM.levelParams('hesap', 95).d.length, 4);
+  assert.equal(ZM.levelParams('hesap', 1).questions, 6);
+  assert.equal(ZM.levelParams('hesap', 10).questions, 15);
+  const P = ZM.levelParams('hesap', 10);
+  assert.equal(P.time, P.questions * P.sec);
+});
+
+test('hesapSoru: sonuç negatif olmaz, terim ve basamak sayısı bölüme uyar', () => {
+  for (let n = 1; n <= 100; n += 3) {
+    const P = ZM.levelParams('hesap', n);
+    for (let k = 0; k < 60; k++) {
+      const q = ZM.hesapSoru(P);
+      assert.ok(Number.isInteger(q.v) && q.v >= 0, `bölüm ${n}: ${q.text} = ${q.v}`);
+      const sayilar = q.text.split(/ [+−×] /);
+      assert.equal(sayilar.length, P.d.length, q.text);
+      sayilar.forEach((x, i) => assert.equal(x.length, P.d[i], `bölüm ${n}: ${q.text}`));
+    }
+  }
+});
+
+test('Renk Tuzağı: renk sayısı 3ten 6ya, kelime sayısı 10dan 28e çıkar; ilk 10 bölümde kural değişmez', () => {
+  assert.equal(ZM.levelParams('renk', 1).colors, 3);
+  assert.equal(ZM.levelParams('renk', 100).colors, 6);
+  assert.equal(ZM.levelParams('renk', 1).items, 10);
+  assert.equal(ZM.levelParams('renk', 10).items, 28);
+  assert.equal(ZM.levelParams('renk', 5).switchP, 0);
+  assert.ok(ZM.levelParams('renk', 50).switchP > 0);
+});
+
+test('İki Önce / Göz Ucu / Saray: yoğunluk artar', () => {
+  assert.equal(ZM.levelParams('iki', 1).n, 1);
+  assert.equal(ZM.levelParams('iki', 100).n, 4);
+  assert.equal(ZM.levelParams('iki', 100).scored, 28);
+  assert.equal(ZM.levelParams('goz', 1).ms, 400);
+  assert.ok(ZM.levelParams('goz', 100).ms >= 60);
+  assert.equal(ZM.levelParams('goz', 100).positions, 12);
+  assert.equal(ZM.levelParams('saray', 1).size, 4);
+  assert.ok(ZM.levelParams('saray', 100).size <= ZM.YERLER.length);
+  assert.ok(ZM.levelParams('saray', 100).size >= 13);
+});
+
+test('rate: Sıra Hafızası hatasız 3 yıldız, 2 hata 1 yıldız, bitmediyse 0', () => {
+  const P = ZM.levelParams('sira', 1);
+  assert.equal(ZM.rate('sira', P, { done: true, mistakes: 0 }), 3);
+  assert.equal(ZM.rate('sira', P, { done: true, mistakes: 2 }), 1);
+  assert.equal(ZM.rate('sira', P, { done: false, mistakes: 3 }), 0);
+});
+
+test('rate: Eşini Bul az hamle çok yıldız, hak aşılırsa 0', () => {
+  const P = ZM.levelParams('es', 1); // 3 çift, 9 hamle hakkı
+  assert.equal(P.maxMoves, 9);
+  assert.equal(ZM.rate('es', P, { done: true, moves: 6 }), 3);
+  assert.equal(ZM.rate('es', P, { done: true, moves: 7 }), 2);
+  assert.equal(ZM.rate('es', P, { done: true, moves: 9 }), 1);
+  assert.equal(ZM.rate('es', P, { done: false, moves: 10 }), 0);
+});
+
+test('rate: Hızlı Hesap ve Renk Tuzağı yanlış sayısına göre; süre biterse 0', () => {
+  const P = ZM.levelParams('hesap', 10); // 15 soru, en fazla 3 yanlış
+  assert.equal(P.maxWrong, 3);
+  assert.equal(ZM.rate('hesap', P, { done: true, wrong: 0 }), 3);
+  assert.equal(ZM.rate('hesap', P, { done: true, wrong: 2 }), 2);
+  assert.equal(ZM.rate('hesap', P, { done: true, wrong: 3 }), 1);
+  assert.equal(ZM.rate('hesap', P, { done: true, wrong: 4 }), 0);
+  assert.equal(ZM.rate('hesap', P, { done: false, wrong: 0 }), 0);
+  const R = ZM.levelParams('renk', 1); // 10 kelime, en fazla 2 yanlış
+  assert.equal(ZM.rate('renk', R, { done: true, wrong: 1 }), 2);
+  assert.equal(ZM.rate('renk', R, { done: true, wrong: 3 }), 0);
+});
+
+test('rate: doğruluk oranlı oyunlar (İki Önce, Göz Ucu, Saray)', () => {
+  assert.equal(ZM.rate('iki', {}, { acc: 0.96 }), 3);
+  assert.equal(ZM.rate('iki', {}, { acc: 0.86 }), 2);
+  assert.equal(ZM.rate('iki', {}, { acc: 0.7 }), 1);
+  assert.equal(ZM.rate('iki', {}, { acc: 0.69 }), 0);
+  assert.equal(ZM.rate('goz', {}, { acc: 4 / 6 }), 1);
+  assert.equal(ZM.rate('goz', {}, { acc: 3 / 6 }), 0);
+  assert.equal(ZM.rate('saray', {}, { acc: 1 }), 3);
+  assert.equal(ZM.rate('saray', {}, { acc: 0.9 }), 2);
+});
+
+test('applyResult: geçilen bölüm bir sonrakini açar, yıldız en iyisiyle kalır', () => {
+  let b = ZM.applyResult(undefined, 1, 2);
+  assert.deepEqual(b, { cur: 2, st: { 1: 2 } });
+  b = ZM.applyResult(b, 1, 1);           // tekrar oynadı, daha az yıldız: değişmez
+  assert.deepEqual(b, { cur: 2, st: { 1: 2 } });
+  b = ZM.applyResult(b, 1, 3);
+  assert.equal(b.st[1], 3);
+  b = ZM.applyResult(b, 2, 0);           // geçemedi: açılmaz
+  assert.deepEqual(b, { cur: 2, st: { 1: 3 } });
+});
+
+test('applyResult: 100. bölümden öteye geçilmez', () => {
+  assert.equal(ZM.applyResult({ cur: 100, st: {} }, 100, 3).cur, 100);
+});
+
+test('skipAhead ve totalStars', () => {
+  assert.equal(ZM.skipAhead({ cur: 5, st: { 1: 3 } }).cur, 15);
+  assert.equal(ZM.skipAhead({ cur: 95, st: {} }).cur, 100);
+  assert.equal(ZM.totalStars({ cur: 4, st: { 1: 3, 2: 2, 3: 1 } }), 6);
+  assert.equal(ZM.totalStars(undefined), 0);
+});
+
+test('starOfDay: en çok yıldızlı, eşitse en ileri bölüm; hiç yıldız yoksa null', () => {
+  assert.deepEqual(ZM.starOfDay([{ id: 'a', stars: 2, n: 9 }, { id: 'b', stars: 3, n: 2 }, { id: 'c', stars: 3, n: 5 }]), { id: 'c', stars: 3, n: 5 });
+  assert.equal(ZM.starOfDay([{ id: 'a', stars: 0, n: 1 }]), null);
+  assert.equal(ZM.starOfDay([]), null);
+});
+
+test('esCols: kart sayısına göre sütun', () => {
+  assert.equal(ZM.esCols(6), 3);
+  assert.equal(ZM.esCols(16), 4);
+  assert.equal(ZM.esCols(20), 5);
+  assert.equal(ZM.esCols(36), 6);
+});
+
+test('loadState: bölüm kaydı varsayılanı boş nesne', () => {
+  assert.deepEqual(ZM.loadState({ hist: [] }).bolum, {});
 });

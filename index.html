@@ -128,10 +128,10 @@ b,h1,h2,h3{font-weight:650}
 .noktalar i{width:8px;height:8px;border-radius:50%;background:var(--line)}
 .noktalar i.on{background:var(--coral);width:22px;border-radius:99px}
 .slotlar{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
-.slot{padding:14px 6px;border-radius:20px;background:var(--card);border:2px solid var(--line);box-shadow:0 4px 0 var(--line);font-weight:600;font-size:16px}
-.slot span{display:block;font-size:26px;margin-bottom:2px}
-.slot small{display:block;color:var(--soft);font-weight:450;font-size:12px}
-.slot.sel{border-color:var(--coral);box-shadow:0 4px 0 var(--coral);background:color-mix(in srgb,var(--coral) 10%,var(--card))}
+.msaat{padding:14px 6px;border-radius:20px;background:var(--card);border:2px solid var(--line);box-shadow:0 4px 0 var(--line);font-weight:600;font-size:16px}
+.msaat span{display:block;font-size:26px;margin-bottom:2px}
+.msaat small{display:block;color:var(--soft);font-weight:450;font-size:12px}
+.msaat.sel{border-color:var(--coral);box-shadow:0 4px 0 var(--coral);background:color-mix(in srgb,var(--coral) 10%,var(--card))}
 
 /* konfeti */
 .konfeti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:20}
@@ -256,6 +256,50 @@ b,h1,h2,h3{font-weight:650}
 @media (prefers-color-scheme:dark){.yildiz{background:#4A3A2A;color:#FFCF8A}}
 .install{margin-bottom:22px!important}
 
+/* bölümler */
+.gridN{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:calc(36px / var(--n,3));width:100%;max-width:340px;margin:0 auto}
+.gridN .tile{border-radius:calc(60px / var(--n,3));box-shadow:0 3px 0 var(--line)}
+.mem{grid-template-columns:repeat(var(--c,4),1fr)!important}
+.mem.sik{gap:6px}
+.mem .c3{aspect-ratio:var(--ar,3/4)}
+.mem .c3 .f{font-size:var(--fs,34px)}
+.choices4.uc{grid-template-columns:repeat(3,1fr);gap:8px}
+.choices4.uc .choice{font-size:15px;padding:20px 2px}
+.goz.p12 .slot.per{width:42px;height:42px;margin:-21px 0 0 -21px;font-size:28px}
+.bno{color:var(--soft);font-weight:450;font-size:13px;margin-left:6px}
+.sumlist .bno{display:block;margin-left:0}
+.yildizlar{display:inline-flex;gap:1px;font-size:11px;line-height:1;vertical-align:middle}
+.yildizlar i{font-style:normal;color:var(--line)}
+.yildizlar i.on{color:#F5B841}
+.yildizlar.orta{font-size:20px;gap:2px}
+.yildizlar.buyuk{font-size:68px;gap:6px;justify-content:center}
+.yildizlar.buyuk i.on{animation:pop .45s ease-out backwards}
+.yildizlar.buyuk i:nth-child(2){animation-delay:.18s}
+.yildizlar.buyuk i:nth-child(3){animation-delay:.36s}
+.devam{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.devam .btn{width:auto;padding:12px 20px;font-size:17px}
+.kat{font-size:15px;margin:20px 4px 8px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.kat small{color:var(--soft);font-weight:450;font-size:12px}
+.bolumler{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.bl{aspect-ratio:1;border-radius:18px;background:var(--card);border:2px solid var(--line);box-shadow:0 3px 0 var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.bl b{font-size:18px;line-height:1}
+.bl:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.bl.simdi{border-color:var(--coral);box-shadow:0 3px 0 var(--coral);background:color-mix(in srgb,var(--coral) 12%,var(--card))}
+.bl.kilit{opacity:.5;box-shadow:none}
+.bl.kilit b{font-size:13px}
+.bl.kilit small{font-size:11px;color:var(--soft)}
+.bolum-kart{display:flex;flex-direction:column;gap:4px;align-items:center;padding:14px;max-width:360px;margin:0 auto;width:100%}
+.bolum-kart b{font-size:20px}
+.bolum-kart span{font-size:16px}
+.bolum-kart small{color:var(--soft);font-size:14px}
+.nasil{text-align:left;max-width:360px;margin:0 auto;width:100%}
+.nasil summary{color:var(--soft);font-weight:600;font-size:15px;cursor:pointer;text-align:center;padding:6px}
+.nasil p{font-size:15px!important;margin-top:6px!important}
+.secenekler{display:flex;flex-direction:column;gap:10px;text-align:left}
+.secenek{display:flex;align-items:center;gap:14px;text-align:left;width:100%}
+.secenek>span:first-child{font-size:30px}
+
 /* sonuç */
 .result{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:16px}
 .result .big{font-size:84px;font-weight:850;line-height:1;font-variant-numeric:tabular-nums}
@@ -295,7 +339,6 @@ let S;
 try { S = ZM.loadState(JSON.parse(localStorage.getItem(KEY))); } catch (e) { S = ZM.loadState(null); }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 const histOf = id => S.hist.filter(h => h.g === id);
-const bestOf = id => { const h = histOf(id); return h.length ? Math.max(...h.map(x => x.s)) : null; };
 const playedDays = () => new Set(S.hist.map(h => h.d));
 const streakInfo = () => ZM.streak(playedDays(), new Date());
 const streak = () => streakInfo().n;
@@ -346,45 +389,53 @@ const ICON = {
 
 /* ---------- oyunlar ---------- */
 const PRAISE = ['Harika!', 'Süper!', 'Tam isabet!', 'Beyin ısındı!', 'Aferin!', 'Çok iyi!'];
+const yildizHTML = (n, cls = '') => `<span class="yildizlar ${cls}" aria-label="${n} yıldız">${[1, 2, 3].map(i => `<i class="${i <= n ? 'on' : ''}">★</i>`).join('')}</span>`;
+const yuzde = a => '%' + Math.round(a * 100);
 
+/* Her oyun bir bölümün ayarlarını (P) ZM.levelParams'tan alır; sonucu ham haliyle api.end'e verir, yıldızı ZM.rate hesaplar. */
 const GAMES = {
   sira: {
-    name: 'Sıra Hafızası', skill: 'Hafıza', color: '#FF7E6B', unit: 'kare', timed: false,
-    howto: 'Kareler sırayla yanacak. <b>İzle</b>, sonra <b>aynı sırayla</b> dokun. Her doğru turda sıra bir kare uzar. <b>2 hata</b> hakkın var.',
+    name: 'Sıra Hafızası', skill: 'Hafıza', color: '#FF7E6B', timed: false,
+    howto: 'Kareler sırayla yanacak. <b>İzle</b>, sonra <b>aynı sırayla</b> dokun. Bölümdeki bütün turları bitir.',
     bilim: 'Araştırmacıların kısa süreli görsel belleği ölçmek için kullandığı “Corsi blokları” görevinin bir türüdür.',
-    start(stage, api) {
-      let alive = true, len = ZM.startLevel(S.lvl.sira, 3, 9), best = 0, lives = 2, seq = [], idx = 0, accept = false;
-      stage.innerHTML = '<div class="msg">İzle…</div><div class="grid9">' +
-        Array.from({ length: 9 }, (_, i) => `<button class="tile" data-i="${i}" aria-label="Kare ${i + 1}"></button>`).join('') + '</div>';
+    ozet: P => `${P.len} karelik sıra · ${P.rounds} tur${P.grid > 3 ? ` · ${P.grid}×${P.grid} tahta` : ''}`,
+    hedef: P => `En fazla ${P.maxMistakes} hata. Hatasız bitirirsen 3 yıldız.`,
+    start(stage, api, P) {
+      let alive = true, done = 0, mistakes = 0, seq = [], idx = 0, accept = false;
+      const T = P.grid * P.grid, can = P.maxMistakes + 1;
+      stage.innerHTML = `<div class="msg">İzle…</div><div class="gridN" style="--n:${P.grid}">` +
+        Array.from({ length: T }, (_, i) => `<button class="tile" data-i="${i}" aria-label="Kare ${i + 1}"></button>`).join('') + '</div>';
       const tiles = [...stage.querySelectorAll('.tile')], m = $('.msg', stage);
-      const stat = () => api.stat(`Sıra ${len} · ${'♥'.repeat(lives)}${'♡'.repeat(2 - lives)}`);
+      const stat = () => api.stat(`Tur ${Math.min(done + 1, P.rounds)}/${P.rounds} · ${'♥'.repeat(Math.max(0, can - mistakes))}${'♡'.repeat(Math.min(can, mistakes))}`);
       const say = (t, c = '') => { m.textContent = t; m.className = 'msg ' + c; };
+      const ses = i => 330 + (i % 9) * 55;
       async function light(i, ms, cls = 'on') { tiles[i].classList.add(cls); await sleep(ms); tiles[i].classList.remove(cls); }
       async function round() {
         if (!alive) return;
         accept = false; idx = 0; seq = [];
-        for (let k = 0; k < len; k++) { let t; do t = rnd(9); while (k && t === seq[k - 1]); seq.push(t); }
-        stat(); say('İzle…'); await sleep(750);
-        const on = Math.max(380, 640 - len * 25);
-        for (const i of seq) { if (!alive) return; beep(330 + i * 55, on / 1000 * .8); await light(i, on); await sleep(170); }
+        for (let k = 0; k < P.len; k++) { let t; do t = rnd(T); while (k && t === seq[k - 1]); seq.push(t); }
+        stat(); say('İzle…'); await sleep(700);
+        for (const i of seq) { if (!alive) return; beep(ses(i), P.onMs / 1000 * .8); await light(i, P.onMs); await sleep(160); }
         if (!alive) return;
         say('Sıra sende', 'go'); accept = true;
       }
-      stage.querySelector('.grid9').addEventListener('pointerdown', async e => {
+      stage.querySelector('.gridN').addEventListener('pointerdown', async e => {
         const b = e.target.closest('.tile'); if (!b || !accept) return;
         const i = +b.dataset.i;
         if (i === seq[idx]) {
-          idx++; beep(330 + i * 55, .08); light(i, 170);
-          if (idx === seq.length) {
-            accept = false; best = len; len++; say(pick(PRAISE), 'ok'); beep(880, .12);
-            await sleep(850); round();
-          }
+          idx++; beep(ses(i), .08); light(i, 170);
+          if (idx < seq.length) return;
+          accept = false; done++; say(pick(PRAISE), 'ok'); beep(880, .12);
+          await sleep(750); if (!alive) return;
+          if (done >= P.rounds) { alive = false; api.end({ done: true, mistakes }, `${P.len} karelik ${P.rounds} sırayı ${mistakes ? mistakes + ' hatayla' : 'hatasız'} tamamladın.`); }
+          else round();
         } else {
-          accept = false; buzz(120); beep(150, .25, 'square'); lives--; stat();
+          accept = false; mistakes++; stat(); buzz(120); beep(150, .25, 'square');
           light(i, 450, 'bad'); tiles[seq[idx]].classList.add('hint');
-          await sleep(900); tiles[seq[idx]].classList.remove('hint');
-          if (lives <= 0) { alive = false; if (best) S.lvl.sira = best; api.end(best, best ? `${best} karelik sırayı aklında tuttun.` : 'Isınma turu sayalım.'); return; }
-          say('Olsun, yeni sıra geliyor', 'bad'); await sleep(900); round();
+          await sleep(900); if (!alive) return;
+          tiles[seq[idx]].classList.remove('hint');
+          if (mistakes > P.maxMistakes) { alive = false; api.end({ done: false, mistakes }, `${done}/${P.rounds} tur tamamlandı.`); return; }
+          say('Olsun, yeni sıra geliyor', 'bad'); await sleep(800); round();
         }
       });
       round();
@@ -393,200 +444,198 @@ const GAMES = {
   },
 
   renk: {
-    name: 'Renk Tuzağı', skill: 'Dikkat', color: '#9B7EDE', unit: 'puan', timed: true, secs: 40,
-    howto: 'Bir renk adı çıkacak ama çoğu zaman <b>başka renkle</b> yazılmış olacak. Üstteki kural ne diyorsa ona dokun: yazının <b>RENGİ</b> mi, <b>ANLAMI</b> mı? Kural ara sıra değişir. 40 saniye.',
+    name: 'Renk Tuzağı', skill: 'Dikkat', color: '#9B7EDE', timed: true,
+    howto: 'Bir renk adı çıkacak ama çoğu zaman <b>başka renkle</b> yazılmış olacak. Üstteki kural ne diyorsa ona dokun: yazının <b>RENGİ</b> mi, <b>ANLAMI</b> mı?',
     bilim: 'Stroop etkisi: beyin yazıyı otomatik okur; rengi söylemek için bu alışkanlığı bastırman gerekir. Kural değişimi zihinsel esnekliği de zorlar.',
-    start(stage, api) {
-      const C = [{ n: 'KIRMIZI', c: '#E5484D' }, { n: 'MAVİ', c: '#3B82F6' }, { n: 'YEŞİL', c: '#22A05A' }, { n: 'MOR', c: '#9B59D0' }];
-      let score = 0, ok = 0, bad = 0, trial = 0, rule = 'renk', cur;
-      stage.innerHTML = '<div class="rule"></div><div class="word"></div><div class="choices4">' +
-        C.map((x, i) => `<button class="choice" data-i="${i}">${x.n}</button>`).join('') + '</div><div class="fb"></div>';
+    ozet: P => `${P.items} kelime · ${P.colors} renk${P.switchP ? ' · kural değişir' : ''} · ${P.time} sn`,
+    hedef: P => `Süre bitmeden, en fazla ${P.maxWrong} yanlış. Hatasız 3 yıldız.`,
+    start(stage, api, P) {
+      const C = [{ n: 'KIRMIZI', c: '#E5484D' }, { n: 'MAVİ', c: '#3B82F6' }, { n: 'YEŞİL', c: '#22A05A' }, { n: 'MOR', c: '#9B59D0' },
+        { n: 'TURUNCU', c: '#F08A24' }, { n: 'GRİ', c: '#8A8F98' }].slice(0, P.colors);
+      const N = C.length;
+      let i = 0, wrong = 0, trial = 0, rule = 'renk', cur, bitti = false;
+      stage.innerHTML = `<div class="rule"></div><div class="word"></div><div class="choices4 ${N > 4 ? 'uc' : ''}">` +
+        C.map((x, k) => `<button class="choice" data-i="${k}">${x.n}</button>`).join('') + '</div><div class="fb"></div>';
       const R = $('.rule', stage), W = $('.word', stage), F = $('.fb', stage);
-      const stat = () => api.stat(`Puan ${score}`);
+      const stat = () => api.stat(`${i}/${P.items}`);
       function next() {
         trial++;
-        const flip = trial > 4 && Math.random() < .3;
+        const flip = P.switchP > 0 && trial > 3 && Math.random() < P.switchP;
         if (flip) rule = rule === 'renk' ? 'anlam' : 'renk';
-        const w = rnd(4); let ink = rnd(4);
-        if (Math.random() < .78) while (ink === w) ink = rnd(4);
+        const w = rnd(N); let ink = rnd(N);
+        if (Math.random() < .78) while (ink === w) ink = rnd(N);
         cur = { w, ink };
         R.textContent = rule === 'renk' ? 'Yazının RENGİNE dokun' : 'Yazının ANLAMINA dokun';
         R.className = 'rule ' + rule + (flip ? ' flip' : '');
         W.textContent = C[w].n; W.style.color = C[ink].c;
         W.classList.remove('pop'); void W.offsetWidth; W.classList.add('pop');
       }
+      const t = makeTimer(P.time * 1000, l => api.time(l / (P.time * 1000)), () => {
+        if (bitti) return; bitti = true; api.end({ done: false, wrong }, `Süre bitti: ${i}/${P.items} kelime.`);
+      });
       stage.querySelector('.choices4').addEventListener('pointerdown', e => {
-        const b = e.target.closest('.choice'); if (!b) return;
+        const b = e.target.closest('.choice'); if (!b || bitti) return;
         const ans = rule === 'renk' ? cur.ink : cur.w;
-        if (+b.dataset.i === ans) { score++; ok++; beep(700, .06); F.textContent = '✓'; F.className = 'fb ok'; }
-        else { score = Math.max(0, score - 1); bad++; buzz(80); beep(160, .18, 'square'); F.textContent = rule === 'renk' ? 'Rengine bak!' : 'Anlamına bak!'; F.className = 'fb bad'; }
-        stat(); next();
+        if (+b.dataset.i === ans) { beep(700, .06); F.textContent = '✓'; F.className = 'fb ok'; }
+        else { wrong++; buzz(80); beep(160, .18, 'square'); F.textContent = rule === 'renk' ? 'Rengine bak!' : 'Anlamına bak!'; F.className = 'fb bad'; }
+        i++; stat();
+        if (i >= P.items) { bitti = true; t.stop(); api.end({ done: true, wrong }, `${P.items} kelimede ${wrong} yanlış.`); }
+        else next();
       });
       stat(); next();
-      const t = makeTimer(this.secs * 1000, l => api.time(l / (this.secs * 1000)), () => api.end(score, `${ok} doğru, ${bad} yanlış.`));
-      return () => t.stop();
+      return () => { bitti = true; t.stop(); };
     }
   },
 
   es: {
-    name: 'Eşini Bul', skill: 'Görsel hafıza', color: '#F5B841', unit: 'puan', timed: false,
-    howto: 'Kartları ikişer ikişer aç ve eşlerini bul. Gördüğün kartların yerini aklında tut: <b>ne kadar az hamle</b> ve <b>ne kadar hızlı</b>, o kadar çok puan.',
+    name: 'Eşini Bul', skill: 'Görsel hafıza', color: '#F5B841', timed: false,
+    howto: 'Kartları ikişer ikişer aç ve eşlerini bul. Gördüğün kartların yerini aklında tut; hamle hakkın bitmeden hepsini eşleştir.',
     bilim: 'Nesnelerin yerini aklında tutmak, görsel-mekânsal hafızayı çalıştırır.',
-    start(stage, api) {
-      const sym = shuffle(['🍎', '🐟', '🌙', '⭐', '🌵', '🎈', '🍋', '🦋', '🍄', '🐢', '🌻', '☂️']).slice(0, 8);
-      const deck = shuffle([...sym, ...sym]);
+    ozet: P => `${P.pairs * 2} kart · ${P.maxMoves} hamle hakkı`,
+    hedef: P => `${Math.ceil(P.pairs * 1.7)} hamlede bitirirsen 3 yıldız.`,
+    start(stage, api, P) {
+      const SYM = ['🍎', '🐟', '🌙', '⭐', '🌵', '🎈', '🍋', '🦋', '🍄', '🐢', '🌻', '☂️', '🍉', '🚲', '🎸', '🐧', '🍩', '🔑', '🐝', '🍓', '🚀', '🐘'];
+      const sym = shuffle(SYM.slice()).slice(0, P.pairs), deck = shuffle([...sym, ...sym]), cols = ZM.esCols(deck.length);
       let open = [], moves = 0, found = 0, lock = false, alive = true;
       const t0 = performance.now();
-      stage.innerHTML = '<div class="mem">' + deck.map((s, i) =>
+      stage.innerHTML = `<div class="mem ${cols > 4 ? 'sik' : ''}" style="--c:${cols};--fs:${cols <= 4 ? 34 : cols === 5 ? 28 : 23}px;--ar:${cols <= 4 ? '3/4' : '4/5'}">` + deck.map((s, i) =>
         `<button class="c3" data-i="${i}" aria-label="Kart"><span class="b"></span><span class="f">${s}</span></button>`).join('') + '</div>';
-      const cards = [...stage.querySelectorAll('.c3')];
-      const secs = () => Math.round((performance.now() - t0) / 1000);
-      const stat = () => api.stat(`${moves} hamle · ${Math.floor(secs() / 60)}:${String(secs() % 60).padStart(2, '0')}`);
-      const iv = setInterval(() => alive && stat(), 500);
+      const stat = () => api.stat(`${moves}/${P.maxMoves} hamle`);
       stage.querySelector('.mem').addEventListener('click', async e => {
-        const c = e.target.closest('.c3'); if (!c || lock || c.classList.contains('open') || c.classList.contains('done')) return;
+        const c = e.target.closest('.c3'); if (!c || lock || !alive || c.classList.contains('open') || c.classList.contains('done')) return;
         c.classList.add('open'); beep(500, .05); open.push(c);
         if (open.length < 2) return;
         moves++; stat(); lock = true;
         const [a, b] = open; open = [];
         if (deck[a.dataset.i] === deck[b.dataset.i]) {
-          await sleep(250); a.classList.add('done'); b.classList.add('done'); beep(820, .1); found++; lock = false;
-          if (found === 8) {
-            alive = false; clearInterval(iv);
-            const s = secs(), score = Math.max(10, 200 - moves * 5 - s);
-            await sleep(500); api.end(score, `${moves} hamle, ${s} saniye.`);
-          }
+          await sleep(250); a.classList.add('done'); b.classList.add('done'); beep(820, .1); found++;
         } else {
-          await sleep(750); a.classList.remove('open'); b.classList.remove('open'); lock = false;
+          await sleep(750); a.classList.remove('open'); b.classList.remove('open');
         }
+        if (!alive) return;
+        const sn = Math.round((performance.now() - t0) / 1000);
+        if (found === P.pairs) { alive = false; await sleep(450); api.end({ done: true, moves }, `${moves} hamle, ${sn} saniye.`); return; }
+        if (moves >= P.maxMoves) { alive = false; await sleep(300); api.end({ done: false, moves }, `Hamle hakkı bitti: ${found}/${P.pairs} çift bulundu.`); return; }
+        lock = false;
       });
       stat();
-      return () => { alive = false; clearInterval(iv); };
+      return () => { alive = false; };
     }
   },
 
   hesap: {
-    name: 'Hızlı Hesap', skill: 'Hız', color: '#3DBFA0', unit: 'doğru', timed: true, secs: 45,
-    howto: 'İşlemler gelecek, <b>doğru sonuca</b> dokun. Üst üste doğru yaptıkça sorular zorlaşır, yanlışta biraz kolaylaşır. 45 saniye.',
-    bilim: 'Zihinden hızlı işlem, işlem hızını ve çalışma belleğini birlikte zorlar. Zorluk sana göre ayarlanır: çok kolay olan sıkar, biraz zorlayan ilgi çeker.',
-    start(stage, api) {
-      let ok = 0, bad = 0, lvl = ZM.startLevel(S.lvl.hesap, 1, 4), top = lvl, run = 0, ans;
-      stage.innerHTML = '<div class="lvl"></div><div class="q"></div><div class="choices4"></div><div class="fb"></div>';
-      const Q = $('.q', stage), B = $('.choices4', stage), F = $('.fb', stage), L = $('.lvl', stage);
+    name: 'Hızlı Hesap', skill: 'Hız', color: '#3DBFA0', timed: true,
+    howto: 'İşlemler gelecek, <b>doğru sonuca</b> dokun. Bölümdeki bütün soruları süre bitmeden yanıtla.',
+    bilim: 'Zihinden hızlı işlem, işlem hızını ve çalışma belleğini birlikte zorlar. Bölümler ilerledikçe basamak ve işlem sayısı artar.',
+    ozet: P => `${P.questions} soru · ${P.ops === 'x' ? `çarpma (${P.d.join('×')} basamak)` : `${P.d.length} sayıyla toplama-çıkarma (${Math.max(...P.d)} basamak)`} · ${P.time} sn`,
+    hedef: P => `Süre bitmeden, en fazla ${P.maxWrong} yanlış. Hatasız 3 yıldız.`,
+    start(stage, api, P) {
+      let i = 0, wrong = 0, ans, bitti = false;
+      stage.innerHTML = '<div class="q"></div><div class="choices4"></div><div class="fb"></div>';
+      const Q = $('.q', stage), B = $('.choices4', stage), F = $('.fb', stage);
       const r = (a, b) => a + rnd(b - a + 1);
-      function gen() {
-        let a, b, op;
-        if (lvl === 1) { op = pick(['+', '−']); a = r(2, 9); b = r(1, 9); if (op === '−' && b > a) [a, b] = [b, a]; }
-        else if (lvl === 2) { op = pick(['+', '−', '×']); if (op === '×') { a = r(2, 9); b = r(2, 5); } else { a = r(8, 25); b = r(3, 9); if (op === '−' && b > a) [a, b] = [b, a]; } }
-        else if (lvl === 3) { op = pick(['+', '−', '×']); if (op === '×') { a = r(3, 9); b = r(3, 9); } else { a = r(15, 60); b = r(6, 39); if (op === '−' && b > a) [a, b] = [b, a]; } }
-        else { op = pick(['+', '−', '×', '×']); if (op === '×') { a = r(6, 12); b = r(4, 12); } else { a = r(35, 99); b = r(12, 59); if (op === '−' && b > a) [a, b] = [b, a]; } }
-        const v = op === '+' ? a + b : op === '−' ? a - b : a * b;
-        return { text: `${a} ${op} ${b}`, v };
-      }
       function next() {
-        const q = gen(); ans = q.v;
+        const q = ZM.hesapSoru(P); ans = q.v;
         const opts = new Set([ans]);
         const cands = shuffle([ans + 1, ans - 1, ans + 2, ans - 2, ans + 10, ans - 10, +String(ans).split('').reverse().join('')]);
         for (const c of cands) { if (opts.size >= 4) break; if (c >= 0 && c !== ans) opts.add(c); }
         while (opts.size < 4) opts.add(ans + r(3, 15));
-        Q.textContent = q.text + ' = ?'; Q.classList.remove('pop'); void Q.offsetWidth; Q.classList.add('pop');
+        const metin = q.text + ' = ?';
+        Q.textContent = metin; Q.style.fontSize = metin.length > 16 ? '30px' : metin.length > 11 ? '40px' : '';
+        Q.classList.remove('pop'); void Q.offsetWidth; Q.classList.add('pop');
         B.innerHTML = shuffle([...opts]).map(o => `<button class="choice" data-v="${o}">${o}</button>`).join('');
-        L.textContent = 'Seviye ' + lvl;
       }
-      B.addEventListener('pointerdown', e => {
-        const b = e.target.closest('.choice'); if (!b) return;
-        if (+b.dataset.v === ans) { ok++; run++; beep(700, .06); F.textContent = '✓'; F.className = 'fb ok'; if (run >= 4 && lvl < 4) { lvl++; top = Math.max(top, lvl); run = 0; } }
-        else { bad++; run = 0; if (lvl > 1) lvl--; buzz(80); beep(160, .18, 'square'); F.textContent = 'Doğrusu ' + ans; F.className = 'fb bad'; }
-        api.stat(`Doğru ${ok}`); next();
+      const stat = () => api.stat(`${i}/${P.questions}`);
+      const t = makeTimer(P.time * 1000, l => api.time(l / (P.time * 1000)), () => {
+        if (bitti) return; bitti = true; api.end({ done: false, wrong }, `Süre bitti: ${i}/${P.questions} soru.`);
       });
-      api.stat('Doğru 0'); next();
-      const t = makeTimer(this.secs * 1000, l => api.time(l / (this.secs * 1000)), () => { S.lvl.hesap = top; api.end(ok, `${ok} doğru, ${bad} yanlış, en yüksek seviye ${top}.`); });
-      return () => t.stop();
+      B.addEventListener('pointerdown', e => {
+        const b = e.target.closest('.choice'); if (!b || bitti) return;
+        if (+b.dataset.v === ans) { beep(700, .06); F.textContent = '✓'; F.className = 'fb ok'; }
+        else { wrong++; buzz(80); beep(160, .18, 'square'); F.textContent = 'Doğrusu ' + ans; F.className = 'fb bad'; }
+        i++; stat();
+        if (i >= P.questions) { bitti = true; t.stop(); api.end({ done: true, wrong }, `${P.questions} soruda ${wrong} yanlış.`); }
+        else next();
+      });
+      stat(); next();
+      return () => { bitti = true; t.stop(); };
     }
   },
 
   iki: {
-    name: 'İki Önce', skill: 'Çalışma belleği', color: '#5B9BF0', unit: 'puan', timed: false,
-    howto: 'Semboller tek tek gelecek. Ekrandaki sembol, <b>N adım önceki</b> sembolle aynıysa <b>Eşleşiyor!</b> düğmesine bas; değilse bekle. 1 önceden başlarsın, iyi gidersen 2 önce, 3 önce… Yaklaşık 1 dakika.',
+    name: 'İki Önce', skill: 'Çalışma belleği', color: '#5B9BF0', timed: false,
+    howto: 'Semboller tek tek gelecek. Ekrandaki sembol, <b>N adım önceki</b> sembolle aynıysa <b>Eşleşiyor!</b> düğmesine bas; değilse bekle. N her bölümün başında yazar.',
     bilim: 'Bu “n-back” görevi, çalışma belleği araştırmalarında en çok kullanılan testtir (Au ve ark., 2015).',
-    start(stage, api) {
+    ozet: P => `${P.n} önce · ${P.n + P.scored} sembol`,
+    hedef: () => 'En az %70 doğru. %95 ve üstü 3 yıldız.',
+    start(stage, api, P) {
       const SYM = ['▲', '●', '■', '◆', '★', '♥', '✚', '☾'];
-      const BLOCKS = 2;
-      let alive = true, n = ZM.startLevel(S.lvl.iki, 1, 4), top = n, score = 0, pressed = false, cur = -1, hits = 0, fas = 0;
+      const n = P.n, len = n + P.scored, seq = ZM.nbackSeq(n, len), targets = ZM.nbackTargets(seq, n);
+      let alive = true, pressed = false, cur = -1, correct = 0, hits = 0, fas = 0;
       stage.innerHTML = '<div class="msg"></div><div class="nb-card"><span class="nb-sym"></span></div><button class="btn nb-btn">Eşleşiyor!</button>';
       const M = $('.msg', stage), SY = $('.nb-sym', stage), CARD = $('.nb-card', stage), BTN = $('.nb-btn', stage);
-      let targets = [];
       BTN.addEventListener('pointerdown', () => {
-        if (cur < 0 || pressed) return;
+        if (cur < n || pressed) return; // ilk n sembol eşleşemez
         pressed = true;
         const hit = targets[cur];
         BTN.classList.add(hit ? 'ok' : 'bad');
         if (hit) beep(700, .06); else { buzz(80); beep(160, .15, 'square'); }
       });
-      async function run() {
-        for (let b = 0; b < BLOCKS && alive; b++) {
-          api.stat(`${n} önce · Blok ${b + 1}/${BLOCKS}`);
-          M.textContent = n === 1 ? 'Bir öncekiyle aynıysa bas' : `${n} önceki ile aynıysa bas`; M.className = 'msg go';
-          SY.textContent = ''; await sleep(1800);
-          const len = n + 12, seq = ZM.nbackSeq(n, len); targets = ZM.nbackTargets(seq, n);
-          let correct = 0, bh = 0, bfa = 0;
-          for (let i = 0; i < len && alive; i++) {
-            cur = i; pressed = false; BTN.classList.remove('ok', 'bad');
-            SY.textContent = SYM[seq[i]]; CARD.classList.remove('pop'); void CARD.offsetWidth; CARD.classList.add('pop');
-            await sleep(1700); if (!alive) return;
-            SY.textContent = ''; await sleep(500); if (!alive) return;
-            M.textContent = ''; M.className = 'msg';
-            if (i >= n) {
-              if (targets[i] === pressed) correct++;
-              if (targets[i] && pressed) bh++;
-              if (!targets[i] && pressed) bfa++;
-              if (targets[i] && !pressed) { M.textContent = 'Bir eşleşme kaçtı'; M.className = 'msg bad'; }
-            }
+      (async () => {
+        api.stat(`${n} önce · 0/${len}`);
+        M.textContent = n === 1 ? 'Bir öncekiyle aynıysa bas' : `${n} önceki ile aynıysa bas`; M.className = 'msg go';
+        await sleep(1700);
+        for (let i = 0; i < len && alive; i++) {
+          cur = i; pressed = false; BTN.classList.remove('ok', 'bad');
+          api.stat(`${n} önce · ${i + 1}/${len}`);
+          SY.textContent = SYM[seq[i]]; CARD.classList.remove('pop'); void CARD.offsetWidth; CARD.classList.add('pop');
+          await sleep(P.showMs); if (!alive) return;
+          SY.textContent = ''; await sleep(450); if (!alive) return;
+          M.textContent = ''; M.className = 'msg';
+          if (i >= n) {
+            if (targets[i] === pressed) correct++;
+            if (targets[i] && pressed) hits++;
+            if (!targets[i] && pressed) fas++;
+            if (targets[i] && !pressed) { M.textContent = 'Bir eşleşme kaçtı'; M.className = 'msg bad'; }
           }
-          cur = -1; hits += bh; fas += bfa;
-          score += bh * n - bfa;
-          const acc = correct / (len - n), next = ZM.nbackAdapt(n, acc);
-          M.textContent = next > n ? `Harika! Şimdi ${next} önce.` : next < n ? `Biraz yavaşlayalım: ${next} önce.` : 'Aynı seviyede devam.';
-          M.className = 'msg ' + (next >= n ? 'ok' : 'bad');
-          top = Math.max(top, n); n = next;
-          await sleep(1600);
         }
         if (!alive) return;
-        alive = false; S.lvl.iki = top; // oynanan en yüksek seviye; sonraki oyun bir tık altından başlar
-        api.end(Math.max(0, score), `${hits} eşleşme yakaladın, ${fas} yanlış basış. En yüksek: ${top} önce.`);
-      }
-      run();
+        alive = false; cur = -1;
+        const acc = correct / P.scored;
+        api.end({ acc }, `${hits} eşleşme yakaladın, ${fas} yanlış basış. Doğruluk ${yuzde(acc)}.`);
+      })();
       return () => { alive = false; };
     }
   },
 
   goz: {
-    name: 'Göz Ucu', skill: 'Algı hızı', color: '#F06A9B', unit: 'puan', timed: false,
-    howto: 'Ortada bir hayvan, kenarda bir <b>yıldız</b> göz açıp kapayıncaya kadar görünecek. Gözünü ortadaki <b>+</b> işaretinde tut. Sonra iki soru: ortada ne vardı, yıldız neredeydi? İkisini de bilirsen görüntü daha da hızlanır. 15 deneme.',
+    name: 'Göz Ucu', skill: 'Algı hızı', color: '#F06A9B', timed: false,
+    howto: 'Ortada bir hayvan, kenarda bir <b>yıldız</b> göz açıp kapayıncaya kadar görünecek. Gözünü ortadaki <b>+</b> işaretinde tut. Sonra iki soru: ortada ne vardı, yıldız neredeydi?',
     bilim: 'Algı hızı antrenmanı, uzun vadeli etkisi en çok araştırılan beyin egzersizlerindendir (ACTIVE çalışması, Edwards ve ark., 2017).',
-    start(stage, api) {
-      const AN = ['🐱', '🐶', '🐰', '🦊'], N = 15;
-      let alive = true, ms = S.lvl.goz ? Math.min(600, Math.round(S.lvl.goz * 1.25)) : 350, run = 0, best = null;
-      const trials = [];
-      const pos = Array.from({ length: 8 }, (_, k) => {
-        const a = k * Math.PI / 4; return { x: 50 + 38 * Math.cos(a), y: 50 + 38 * Math.sin(a) };
+    ozet: P => `${P.trials} deneme · ${P.ms} ms görünür · ${P.positions} konum`,
+    hedef: () => 'En az %60 isabet. %90 ve üstü 3 yıldız.',
+    start(stage, api, P) {
+      const AN = ['🐱', '🐶', '🐰', '🦊', '🐼', '🐸'].slice(0, P.animals), NP = P.positions;
+      let alive = true, ok = 0;
+      const pos = Array.from({ length: NP }, (_, k) => {
+        const a = k * 2 * Math.PI / NP - Math.PI / 2; return { x: 50 + 39 * Math.cos(a), y: 50 + 39 * Math.sin(a) };
       });
-      stage.innerHTML = '<div class="msg"></div><div class="goz"><span class="slot mid"></span>' +
-        pos.map((p, k) => `<button class="slot per" data-k="${k}" style="left:${p.x}%;top:${p.y}%"></button>`).join('') +
-        '</div><div class="choices4 goz-ans"></div>';
+      stage.innerHTML = `<div class="msg"></div><div class="goz ${NP > 8 ? 'p12' : ''}"><span class="slot mid"></span>` +
+        pos.map((p, k) => `<button class="slot per" data-k="${k}" style="left:${p.x}%;top:${p.y}%" aria-label="Konum ${k + 1}"></button>`).join('') +
+        `</div><div class="choices4 goz-ans ${AN.length > 4 ? 'uc' : ''}"></div>`;
       const M = $('.msg', stage), F = $('.goz', stage), MID = $('.mid', stage), PER = [...stage.querySelectorAll('.per')], ANS = $('.goz-ans', stage);
       const say = (t, c = '') => { M.textContent = t; M.className = 'msg ' + c; };
       const waitTap = (root, sel) => new Promise(res => {
         const h = e => { const b = e.target.closest(sel); if (!b) return; root.removeEventListener('pointerdown', h); res(b); };
         root.addEventListener('pointerdown', h);
       });
-      function clear() { F.className = 'goz'; MID.textContent = ''; PER.forEach(p => { p.textContent = ''; p.className = 'slot per'; }); ANS.innerHTML = ''; }
+      function clear() { F.classList.remove('mask', 'ask'); MID.textContent = ''; PER.forEach(p => { p.textContent = ''; p.className = 'slot per'; }); ANS.innerHTML = ''; }
       async function trial(t) {
-        clear(); api.stat(`Deneme ${t + 1}/${N} · ${ms} ms`);
+        clear(); api.stat(`Deneme ${t + 1}/${P.trials}`);
         say('Ortadaki + işaretine bak'); MID.textContent = '+'; await sleep(700); if (!alive) return;
-        const an = Math.floor(Math.random() * 4), k = Math.floor(Math.random() * 8);
+        const an = rnd(AN.length), k = rnd(NP);
         say(''); MID.textContent = AN[an]; PER[k].textContent = '⭐';
-        await sleep(ms); if (!alive) return;
+        await sleep(P.ms); if (!alive) return;
         F.classList.add('mask'); MID.textContent = ''; PER[k].textContent = '';
         await sleep(300); if (!alive) return;
         F.classList.remove('mask');
@@ -597,36 +646,33 @@ const GAMES = {
         say('Yıldız neredeydi?', 'go'); F.classList.add('ask');
         const b2 = await waitTap(F, '.per'); if (!alive) return;
         F.classList.remove('ask');
-        const ok2 = +b2.dataset.k === k, ok = ok1 && ok2;
+        const ok2 = +b2.dataset.k === k, iki = ok1 && ok2;
         PER[k].textContent = '⭐'; PER[k].classList.add('right');
         if (!ok2) b2.classList.add('wrong');
-        trials.push({ ok, ms });
-        if (ok) { beep(760, .07); if (best == null || ms < best) best = ms; say(pick(PRAISE), 'ok'); }
+        if (iki) { ok++; beep(760, .07); say(pick(PRAISE), 'ok'); }
         else { buzz(80); beep(160, .15, 'square'); say(!ok1 && !ok2 ? 'İkisi de kaçtı' : !ok1 ? `Ortada ${AN[an]} vardı` : 'Yıldız başka yerdeydi', 'bad'); }
-        ({ ms, run } = ZM.gozAdapt(ms, ok, run));
         await sleep(900);
       }
       (async () => {
-        for (let t = 0; t < N && alive; t++) await trial(t);
+        for (let t = 0; t < P.trials && alive; t++) await trial(t);
         if (!alive) return;
-        alive = false; if (best != null) S.lvl.goz = best;
-        const okN = trials.filter(x => x.ok).length;
-        api.end(ZM.gozScore(trials), `${N} denemenin ${okN}'inde ikisini de bildin.${best != null ? ` En hızlı: ${best} ms.` : ''}`);
+        alive = false;
+        api.end({ acc: ok / P.trials }, `${ok}/${P.trials} denemede ikisini de bildin.`);
       })();
       return () => { alive = false; };
     }
   },
 
   saray: {
-    name: 'Hafıza Sarayı', skill: 'Hafıza tekniği', color: '#C98A5E', unit: 'doğru', timed: false,
+    name: 'Hafıza Sarayı', skill: 'Hafıza tekniği', color: '#C98A5E', timed: false,
     howto: 'Kelimeler sırayla güzergâhındaki yerlere yerleşecek. Her kelimeyi o yerde <b>abartılı, renkli, hareketli</b> canlandır. Sonra yolu baştan yürü: hangi yerde ne vardı?',
     bilim: 'Hafıza Sarayı (loci) tekniğini 6 hafta çalışan sıradan kişiler, hafıza şampiyonlarına yakın sonuç aldı ve 4 ay sonra da korudu (Dresler ve ark., 2017).',
-    start(stage, api) {
-      let alive = true;
-      const L = S.lvl.saray || 1, size = ZM.palaceSize(L), places = ZM.YERLER.slice(0, size);
-      const words = ZM.pickWords(ZM.KELIMELER, size, Math.random);
+    ozet: P => `${P.size} kelime · kelime başına ${String(Math.round(P.studyMs / 100) / 10).replace('.', ',')} sn`,
+    hedef: () => 'En az %70 doğru. Hepsini bilirsen 3 yıldız.',
+    start(stage, api, P) {
+      let alive = true, tmr = null;
+      const size = P.size, places = ZM.YERLER.slice(0, size), words = ZM.pickWords(ZM.KELIMELER, size, Math.random);
       (async () => {
-        // 1) yerleştirme
         for (let i = 0; i < size && alive; i++) {
           api.stat(`Yerleştir ${i + 1}/${size}`);
           stage.innerHTML = `<div class="sp-place">📍 ${places[i]}</div><div class="sp-arrow">↓</div>
@@ -635,12 +681,11 @@ const GAMES = {
             <div class="tbar"><i id="sp-tb"></i></div><button class="btn ghost" id="sp-next">Canlandırdım</button>`;
           const tb = $('#sp-tb', stage);
           await new Promise(res => {
-            const t = makeTimer(5000, l => { tb.style.transform = `scaleX(${l / 5000})`; }, res);
-            $('#sp-next', stage).onclick = () => { t.stop(); res(); };
+            tmr = makeTimer(P.studyMs, l => { tb.style.transform = `scaleX(${l / P.studyMs})`; }, res);
+            $('#sp-next', stage).onclick = () => { tmr.stop(); res(); };
           });
         }
         if (!alive) return;
-        // 2) hatırlama: yolu baştan yürü
         let ok = 0;
         for (let i = 0; i < size && alive; i++) {
           api.stat(`Hatırla ${i + 1}/${size}`);
@@ -651,7 +696,7 @@ const GAMES = {
             <div class="choices4">${opts.map(o => `<button class="choice" data-w="${o}">${o}</button>`).join('')}</div>`;
           const b = await new Promise(res => stage.querySelector('.choices4').addEventListener('pointerdown', e => {
             const x = e.target.closest('.choice'); if (x) res(x);
-          }, { once: false }));
+          }));
           if (!alive) return;
           const right = b.dataset.w === words[i];
           if (right) { ok++; b.classList.add('c-ok'); beep(720, .07); }
@@ -661,20 +706,17 @@ const GAMES = {
         }
         if (!alive) return;
         alive = false;
-        let note;
-        if (ok === size && L < 7) { S.lvl.saray = L + 1; note = `Sarayına bir oda eklendi! Sonraki tur ${ZM.palaceSize(L + 1)} kelime.`; }
-        else if (ok < size / 2 && L > 1) { S.lvl.saray = L - 1; note = `Bir sonraki tur ${ZM.palaceSize(L - 1)} kelimeyle, acele yok.`; }
-        else { S.lvl.saray = L; note = ok === size ? 'Sarayın tamamen dolu, ustasın!' : `${size} yerden ${ok}'ini hatırladın.`; }
-        api.end(ok, note);
+        api.end({ acc: ok / size }, `${size} yerden ${ok} tanesini hatırladın.`);
       })();
-      return () => { alive = false; };
+      return () => { alive = false; if (tmr) tmr.stop(); };
     }
   },
 };
 const ORDER = ['sira', 'renk', 'es', 'hesap', 'iki', 'goz'];
 
 const YER_DE = { 'Bina kapısı': 'bina kapısında', 'Danışma': 'danışmada', 'Merdiven': 'merdivende', 'Asansör': 'asansörde',
-  'Koridor': 'koridorda', 'Çay ocağı': 'çay ocağında', 'Senin masan': 'masanda', 'Pencere': 'pencerede', 'Dolap': 'dolapta', 'Toplantı odası': 'toplantı odasında' };
+  'Koridor': 'koridorda', 'Çay ocağı': 'çay ocağında', 'Senin masan': 'masanda', 'Pencere': 'pencerede', 'Dolap': 'dolapta', 'Toplantı odası': 'toplantı odasında',
+  'Yazıcı': 'yazıcıda', 'Arşiv': 'arşivde', 'Kantin': 'kantinde', 'Müdür odası': 'müdür odasında', 'Lavabo': 'lavaboda', 'Otopark': 'otoparkta' };
 const DERS = [
   ['Beynin yerleri sever', 'İnsan beyni, gördüğü yerleri listelerden çok daha iyi hatırlar. Hafıza şampiyonlarının sırrı da bu: <b>Hafıza Sarayı</b>.'],
   ['Sarayın, her gün yürüdüğün yol', 'Bina kapısı → Danışma → Merdiven → Asansör → Koridor → Çay ocağı → Senin masan… Bu sırayı zaten ezbere biliyorsun. İşte sarayın hazır!'],
@@ -784,18 +826,10 @@ function konfeti() {
 let cleanup = null;
 function stopGame() { if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; } }
 let navId = 0; // her ekran değişiminde artar; eski ekrandan gelen geç olaylar yok sayılır
-function go(html) { stopGame(); navId++; app.innerHTML = html; window.scrollTo(0, 0); }
+function go(html) { stopGame(); navId++; document.querySelectorAll('.konfeti').forEach(k => k.remove()); app.innerHTML = html; window.scrollTo(0, 0); }
 function enterSub() { if (!history.state || history.state.s !== 'sub') history.pushState({ s: 'sub' }, ''); }
 window.addEventListener('popstate', () => { if (S.onb) renderHome(); else onboarding(); });
 function backHome() { if (history.state && history.state.s === 'sub') history.back(); else renderHome(); }
-
-function spark(id) {
-  const v = histOf(id).slice(-7).map(h => h.s);
-  if (v.length < 2) return '';
-  const max = Math.max(...v), min = Math.min(...v), W = 60, H = 18;
-  const pts = v.map((s, i) => `${(i / (v.length - 1) * W).toFixed(1)},${(H - 2 - (max === min ? .5 : (s - min) / (max - min)) * (H - 4)).toFixed(1)}`).join(' ');
-  return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline points="${pts}" fill="none" stroke="${GAMES[id].color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-}
 
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; if ($('.home')) renderHome(); });
@@ -810,6 +844,10 @@ function installCard() {
   else body = '<div><b>Ana ekrana ekle:</b> Chrome’da sağ üstteki ⋮ menüsü → “Ana ekrana ekle” ya da “Uygulamayı yükle”.</div>';
   return `<div class="card install">${body}<button class="x" id="hideInst" aria-label="Kapat">✕</button></div>`;
 }
+
+const rozet = id => { const b = S.bolum[id]; return b
+  ? `<span class="rozet">Bölüm ${b.cur}${ZM.totalStars(b) ? ' · ⭐ ' + ZM.totalStars(b) : ''}</span>`
+  : '<span class="rozet yeni">Yeni</span>'; };
 
 function renderHome() {
   stopGame(); navId++;
@@ -831,7 +869,7 @@ function renderHome() {
     </section>
     <section class="card daily">
       <h2>${done ? 'Bugünkü mola tamam ✓' : 'Günün Molası'}</h2>
-      <p>${done ? 'Yarın yeni oyunlar seni bekliyor. İstersen yine oyna.' : '6 kelime + 3 oyun · yaklaşık 5 dakika'}</p>
+      <p>${done ? 'Yarın yeni oyunlar seni bekliyor. İstersen yine oyna.' : '6 kelime + 3 oyun · her oyunda sıradaki bölümün'}</p>
       <div class="chips">${dg.map(id => `<span class="chip ${playedToday(id) && done ? 'done' : ''}"><span class="dot" style="background:${GAMES[id].color}"></span>${GAMES[id].name}</span>`).join('')}</div>
       <button class="btn" id="startDaily">${done ? 'Bir tur daha' : 'Molaya başla'}</button>
       ${done ? '' : '<button class="mini" id="mini">Vaktim az: <u>mini mola</u> · tek oyun, 1 dakika</button>'}
@@ -840,16 +878,16 @@ function renderHome() {
     <h2 class="sec">Hafıza tekniği</h2>
     <button class="card saray-card" id="saray">
       <span class="gico" style="background:${GAMES.saray.color}">${ICON.saray}</span>
-      <span class="ginfo"><b>Hafıza Sarayı</b><small>${S.lvl.saray ? `Seviye ${S.lvl.saray} · ${ZM.palaceSize(S.lvl.saray)} kelime` : 'Şampiyonların tekniği'}</small></span>
-      <span class="rozet ${bestOf('saray') == null ? 'yeni' : ''}">${bestOf('saray') == null ? 'Yeni' : 'Rekor ' + bestOf('saray')}</span>
+      <span class="ginfo"><b>Hafıza Sarayı</b><small>${S.bolum.saray ? GAMES.saray.ozet(ZM.levelParams('saray', S.bolum.saray.cur)) : 'Şampiyonların tekniği'}</small></span>
+      ${rozet('saray')}
     </button>
     <h2 class="sec">Oyunlar</h2>
     <div class="games">
-      ${ORDER.map(id => { const g = GAMES[id], b = bestOf(id); return `
+      ${ORDER.map(id => { const g = GAMES[id]; return `
       <button class="card tile-g" data-g="${id}">
         <span class="gico" style="background:${g.color}">${ICON[id]}</span>
         <b>${g.name}</b><small>${g.skill}</small>
-        <span class="rozet ${b == null ? 'yeni' : ''}">${b == null ? 'Yeni' : 'Rekor ' + b}</span>${spark(id)}
+        ${rozet(id)}
       </button>`; }).join('')}
     </div>
     <button class="btn ghost" id="bilim" style="margin-top:22px">🔬 Bilim ne diyor?</button>
@@ -859,16 +897,16 @@ function renderHome() {
   $('#demli').onclick = () => { enterSub(); slotPage(); };
   $('#startDaily').onclick = () => { enterSub(); startDaily(dg); };
   const mini = $('#mini'); if (mini) mini.onclick = () => { enterSub(); playGame(dg[0], null); };
-  app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { enterSub(); playGame(b.dataset.g, null); });
+  app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => openGame(b.dataset.g));
   $('#bilim').onclick = () => { enterSub(); bilimPage(); };
-  $('#saray').onclick = () => { enterSub(); if (S.lvl.saray == null) sarayDers(() => playGame('saray', null)); else playGame('saray', null); };
+  $('#saray').onclick = () => openGame('saray');
   const hide = $('#hideInst'); if (hide) hide.onclick = () => { S.hideInstall = true; save(); renderHome(); };
   const inst = $('#inst'); if (inst) inst.onclick = async () => { deferredPrompt.prompt(); try { await deferredPrompt.userChoice; } catch (e) {} deferredPrompt = null; renderHome(); };
 }
 
 /* ---------- tanışma ve mola saati ---------- */
 const slotSecici = () => `<div class="slotlar">${Object.entries(SLOT_AD).map(([k, [e, ad, saat]]) =>
-  `<button class="slot ${S.slot === k ? 'sel' : ''}" data-slot="${k}"><span>${e}</span>${ad}<small>${saat}</small></button>`).join('')}</div>`;
+  `<button class="msaat ${S.slot === k ? 'sel' : ''}" data-slot="${k}"><span>${e}</span>${ad}<small>${saat}</small></button>`).join('')}</div>`;
 function slotBagla() {
   app.querySelectorAll('[data-slot]').forEach(b => b.onclick = () => {
     S.slot = S.slot === b.dataset.slot ? null : b.dataset.slot; save();
@@ -909,103 +947,157 @@ function slotPage() {
   $('#x').onclick = backHome; $('#n').onclick = backHome;
 }
 
-function playGame(id, ctx) {
-  const g = GAMES[id];
+/* ---------- bölümler ---------- */
+const bolumOf = id => S.bolum[id] || { cur: 1, st: {} };
+
+// Ana sayfadan bir oyuna giriş: ilk kez geliyorsa nereden başlayacağını seçer
+function openGame(id) {
+  enterSub();
+  if (S.bolum[id]) return levelMap(id);
+  if (id === 'saray') return sarayDers(() => seviyeSec(id));
+  seviyeSec(id);
+}
+
+function seviyeSec(id) {
+  const g = GAMES[id], sec = [['kolay', 'Yeni başlıyorum', '🌱'], ['orta', 'Biraz ısındım', '☕'], ['zor', 'Zorla beni', '🔥']];
   go(`
-  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button>${ctx ? `<span class="progress">Günün Molası · ${ctx.i + 1}/${ctx.daily.length}</span>` : ''}</div>
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">${g.name}</span></div>
+  <div class="howto">
+    <span class="gico" style="background:${g.color}">${ICON[id]}</span>
+    <h2>Nereden başlayalım?</h2>
+    <p>Bu oyunda <b>${ZM.LEVELS} bölüm</b> var. Bölümler ilerledikçe iş yoğunlaşır. Sana uyan yerden başla.</p>
+    <div class="secenekler">${sec.map(([k, ad, e]) => { const n = ZM.START[k]; return `
+      <button class="card secenek" data-n="${n}"><span>${e}</span><span class="ginfo"><b>${ad}</b><small>Bölüm ${n} · ${g.ozet(ZM.levelParams(id, n))}</small></span></button>`; }).join('')}
+    </div>
+  </div>`);
+  $('#x').onclick = backHome;
+  app.querySelectorAll('.secenek').forEach(b => b.onclick = () => { S.bolum[id] = { cur: +b.dataset.n, st: {} }; save(); levelMap(id); });
+}
+
+function levelMap(id) {
+  const g = GAMES[id], b = bolumOf(id), tot = ZM.totalStars(b);
+  const kat = t => {
+    const a = t * 10 + 1;
+    return `<h3 class="kat">Bölüm ${a}–${a + 9}<small>${g.ozet(ZM.levelParams(id, a))}</small></h3>
+    <div class="bolumler">${Array.from({ length: 10 }, (_, i) => {
+      const n = a + i, st = b.st[n] || 0, acik = n <= b.cur;
+      return `<button class="bl ${acik ? (n === b.cur ? 'simdi' : 'acik') : 'kilit'}" data-n="${n}" ${acik ? '' : 'disabled'} aria-label="Bölüm ${n}${acik ? '' : ' (kilitli)'}">
+        ${acik ? `<b>${n}</b>${yildizHTML(st)}` : `<b>🔒</b><small>${n}</small>`}</button>`;
+    }).join('')}</div>`;
+  };
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">${g.name}</span><span class="gs">⭐ ${tot}/${ZM.LEVELS * 3}</span></div>
+  <div class="card devam" style="border-color:${g.color}">
+    <span class="gico" style="background:${g.color}">${ICON[id]}</span>
+    <span class="ginfo"><b>Bölüm ${b.cur}</b><small>${g.ozet(ZM.levelParams(id, b.cur))}</small></span>
+    <button class="btn" id="oyna">Oyna</button>
+  </div>
+  ${Array.from({ length: ZM.LEVELS / 10 }, (_, t) => kat(t)).join('')}
+  ${b.cur < ZM.LEVELS ? '<button class="link" id="atla">Bu bölümler kolay mı? 10 bölüm ileri atla</button>' : ''}`);
+  $('#x').onclick = backHome;
+  $('#oyna').onclick = () => playGame(id, null, b.cur, 'map');
+  app.querySelectorAll('.bl:not(.kilit)').forEach(x => x.onclick = () => playGame(id, null, +x.dataset.n, 'map'));
+  const atla = $('#atla'); if (atla) atla.onclick = () => { S.bolum[id] = ZM.skipAhead(S.bolum[id]); save(); levelMap(id); };
+  if (b.cur > 10) { const s = $('.bl.simdi'); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }
+}
+
+// from === 'map' ise ✕ bölüm haritasına döner
+function playGame(id, ctx, n, from) {
+  const g = GAMES[id], b = bolumOf(id);
+  n = n || b.cur;
+  const P = ZM.levelParams(id, n), eski = b.st[n] || 0, ilk = ZM.totalStars(b) === 0;
+  const cik = () => (from === 'map' ? levelMap(id) : backHome());
+  go(`
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button>${ctx ? `<span class="progress">Günün Molası · ${ctx.i + 1}/${ctx.daily.length}</span>` : `<span class="gt">${g.name}</span>`}</div>
   <div class="howto">
     <span class="gico" style="background:${g.color}">${ICON[id]}</span>
     <div><span class="tag" style="background:${g.color}">${g.skill}</span></div>
     <h2>${g.name}</h2>
-    <p>${g.howto}</p>
-    ${g.bilim ? `<p class="bilim">🔬 ${g.bilim}</p>` : ''}
+    <div class="card bolum-kart"><b>Bölüm ${n} ${eski ? yildizHTML(eski) : ''}</b><span>${g.ozet(P)}</span><small>🎯 ${g.hedef(P)}</small></div>
+    <details class="nasil" ${ilk ? 'open' : ''}><summary>Nasıl oynanır?</summary><p>${g.howto}</p>${g.bilim ? `<p class="bilim">🔬 ${g.bilim}</p>` : ''}</details>
     ${id === 'saray' ? '<button class="link" id="ders">Dersi tekrar gör</button>' : ''}
   </div>
   <button class="btn" id="go">Başla</button>`);
-  $('#x').onclick = backHome;
-  const dr = $('#ders'); if (dr) dr.onclick = () => sarayDers(() => playGame('saray', ctx));
+  $('#x').onclick = cik;
+  const dr = $('#ders'); if (dr) dr.onclick = () => sarayDers(() => playGame('saray', ctx, n, from));
   $('#go').onclick = async () => {
     const my = navId; $('#go').disabled = true;
     if (g.timed) {
-      for (const n of [3, 2, 1]) {
+      for (const k of [3, 2, 1]) {
         if (navId !== my) return;
-        const c = document.createElement('div'); c.className = 'count'; c.textContent = n; document.body.appendChild(c); beep(440, .08); await sleep(600); c.remove();
+        const c = document.createElement('div'); c.className = 'count'; c.textContent = k; document.body.appendChild(c); beep(440, .08); await sleep(600); c.remove();
       }
     }
     if (navId !== my) return; // geri sayım sırasında çıkıldı
-    runGame(id, ctx);
+    runGame(id, ctx, n, from);
   };
 }
 
-function runGame(id, ctx) {
-  const g = GAMES[id];
+function runGame(id, ctx, n, from) {
+  const g = GAMES[id], P = ZM.levelParams(id, n);
   go(`
-  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">${g.name}</span><span class="gs" id="gs"></span></div>
+  <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button><span class="gt">${g.name} <small class="bno">Bölüm ${n}</small></span><span class="gs" id="gs"></span></div>
   <div class="tbar ${g.timed ? '' : 'hide'}"><i id="tb"></i></div>
   <div class="stage" id="stage"></div>`);
-  $('#x').onclick = backHome;
+  $('#x').onclick = () => (from === 'map' ? levelMap(id) : backHome());
   const gs = $('#gs'), tb = $('#tb');
   let ended = false;
   const my = navId;
   const api = {
     stat: t => { gs.textContent = t; },
     time: f => { tb.style.transform = `scaleX(${f})`; tb.style.background = f < .2 ? 'var(--bad)' : 'var(--teal)'; },
-    end: (score, detail) => { if (ended || navId !== my) return; ended = true; stopGame(); showResult(id, score, detail, ctx); },
+    end: (o, detail) => { if (ended || navId !== my) return; ended = true; stopGame(); showResult(id, n, ZM.rate(id, P, o), detail, ctx, from); },
   };
-  cleanup = g.start($('#stage'), api) || null;
+  cleanup = g.start($('#stage'), api, P) || null;
 }
 
-function showResult(id, score, detail, ctx) {
-  const g = GAMES[id], prevH = histOf(id), prev = prevH.length ? prevH[prevH.length - 1].s : null, best = bestOf(id);
-  const isBest = best != null && score > best;
-  S.hist.push({ g: id, s: score, d: dayKey(), t: Date.now() });
+function showResult(id, n, stars, detail, ctx, from) {
+  const g = GAMES[id], once = bolumOf(id), eski = once.st[n] || 0;
+  S.bolum[id] = ZM.applyResult(S.bolum[id], n, stars);
+  S.hist.push({ g: id, s: stars, b: n, d: dayKey(), t: Date.now() });
   if (S.hist.length > 2000) S.hist = S.hist.slice(-2000);
   const last = ctx && ctx.i === ctx.daily.length - 1;
   if (last) S.daily[ctx.k || dayKey()] = true;
   save();
-  let verdict;
-  if (prev == null) verdict = 'İlk skorun kaydedildi. Bundan sonra rakibin sensin.';
-  else if (isBest) verdict = 'Yeni rekor! Bugün beyin formda.';
-  else if (score > prev) verdict = `Geçen seferden ${score - prev} ${g.unit} daha iyi.`;
-  else if (score === prev) verdict = 'Geçen seferle aynı. İstikrar da başarıdır.';
-  else verdict = 'Geçen seferin biraz altında. Her gün aynı olmaz, yarın yine dene.';
-  if (score > 0) buzz([30, 40, 30]);
-  if (isBest) konfeti();
+  const gecti = stars > 0, acildi = gecti && n >= once.cur && n < ZM.LEVELS;
+  let verdict = ['Bu sefer olmadı. Bir daha dene, olur.', 'Bölüm geçildi! Tekrar oynarsan yıldız toplarsın.', 'Çok iyi! Bir yıldız daha kapabilirsin.', 'Kusursuz! Üç yıldız.'][stars];
+  if (gecti && n === ZM.LEVELS) verdict = 'Son bölümü de bitirdin. Ustasın!';
+  else if (eski && stars > eski) verdict += ' Önceki denemenden daha iyi.';
+  if (gecti) buzz([30, 40, 30]);
+  let dugmeler;
+  if (ctx && !last) dugmeler = `<button class="btn" id="next">Sıradaki: ${GAMES[ctx.daily[ctx.i + 1]].name}</button>`;
+  else if (ctx) dugmeler = '<button class="btn" id="fin">Molayı bitir</button>';
+  else if (gecti && n < ZM.LEVELS) dugmeler = `<button class="btn" id="ileri">Bölüm ${n + 1}</button><button class="link" id="again">Bu bölümü tekrar oyna</button><button class="link" id="map" style="margin-top:0">Bütün bölümler</button>`;
+  else dugmeler = `<button class="btn" id="again">${gecti ? 'Tekrar oyna' : 'Tekrar dene'}</button><button class="link" id="map">Bütün bölümler</button>`;
   go(`
   <div class="gtop"><button class="close" id="x" aria-label="Çık">✕</button>${ctx ? `<span class="progress">Günün Molası · ${ctx.i + 1}/${ctx.daily.length}</span>` : `<span class="gt">${g.name}</span>`}</div>
   <div class="result">
-    ${isBest ? '<span class="newbest">YENİ REKOR</span>' : ''}
-    <div><div class="big" style="color:${g.color}">${score}</div><div class="unit">${g.unit}</div></div>
+    ${yildizHTML(stars, 'buyuk')}
+    <h2 style="font-size:28px">${gecti ? `Bölüm ${n} tamam!` : `Bölüm ${n}`}</h2>
     <p class="verdict">${verdict}</p>
     <p class="detail">${detail}</p>
-    <div class="stats">
-      <div class="card"><small>Önceki</small><b>${prev == null ? '–' : prev}</b></div>
-      <div class="card"><small>Rekor</small><b>${Math.max(score, best ?? 0)}</b></div>
-    </div>
+    ${acildi ? `<p class="yildiz">🔓 Bölüm ${n + 1} açıldı</p>` : ''}
   </div>
-  ${ctx && !last ? `<button class="btn" id="next">Sıradaki: ${GAMES[ctx.daily[ctx.i + 1]].name}</button>`
-    : ctx ? '<button class="btn" id="fin">Molayı bitir</button>'
-    : '<button class="btn" id="again">Tekrar oyna</button><button class="link" id="home">Ana sayfa</button>'}`);
-  $('#x').onclick = backHome;
-  const n = $('#next'); if (n) n.onclick = () => playGame(ctx.daily[ctx.i + 1], { ...ctx, i: ctx.i + 1 });
+  ${dugmeler}`);
+  if (stars === 3) konfeti();
+  $('#x').onclick = () => (from === 'map' ? levelMap(id) : backHome());
+  const nx = $('#next'); if (nx) nx.onclick = () => playGame(ctx.daily[ctx.i + 1], { ...ctx, i: ctx.i + 1 });
   const f = $('#fin'); if (f) f.onclick = () => {
     const k = ctx.k || dayKey(), w = S.words[k];
     if (w && w.now === undefined) recallScreen(k, 'now', ctx, () => dailySummary(ctx.daily, k));
     else dailySummary(ctx.daily, k);
   };
-  const a = $('#again'); if (a) a.onclick = () => playGame(id, null);
-  const h = $('#home'); if (h) h.onclick = backHome;
+  const il = $('#ileri'); if (il) il.onclick = () => playGame(id, null, n + 1, from);
+  const a = $('#again'); if (a) a.onclick = () => playGame(id, null, n, from);
+  const mp = $('#map'); if (mp) mp.onclick = () => levelMap(id);
 }
 
 function dailySummary(ids, k = dayKey()) {
   const st = streak();
   const lines = ['Beyin demlendi, mola tamam. Yarın yeni oyunlar var!', 'Mola bitti, çay soğumadan masaya dön.', 'Bugünkü jimnastik tamam. Yarın aynı saatte?', 'Güzel mola oldu. Şimdi bir bardak su iç, gözlerini dinlendir.'];
+  const son = id => histOf(id).filter(h => h.b).pop();
   // günün yıldızı: mola güzel bir anla bitsin
-  const res = ids.map(id => {
-    const h = histOf(id); if (!h.length) return null;
-    return { id, s: h[h.length - 1].s, best: h.length > 1 ? Math.max(...h.slice(0, -1).map(x => x.s)) : null };
-  }).filter(Boolean);
-  const yildiz = ZM.highlight(res);
+  const yildiz = ZM.starOfDay(ids.map(id => { const h = son(id); return h ? { id, stars: h.s, n: h.b } : null; }).filter(Boolean));
   const wk = ZM.weekProgress(playedDays(), new Date());
   go(`
   <div class="result">
@@ -1013,9 +1105,9 @@ function dailySummary(ids, k = dayKey()) {
     <h2 style="font-size:30px">Mola tamam!</h2>
     <p class="verdict">${pick(lines)}</p>
     <p class="detail">${st ? `🔥 ${st} gün üst üste · ` : ''}bu hafta ${wk.done}/${wk.goal} bardak${wk.done >= wk.goal ? ' 🎉' : ''}</p>
-    ${yildiz ? `<p class="yildiz">⭐ Günün yıldızı: <b>${GAMES[yildiz.id].name}</b>${yildiz.record ? ' · yeni rekor!' : ''}</p>` : ''}
-    <div class="sumlist">${ids.map(id => { const h = histOf(id).pop(); return `
-      <div class="card"><span class="gico" style="background:${GAMES[id].color}">${ICON[id]}</span><span>${GAMES[id].name}</span><b>${h ? h.s : '–'} <small style="color:var(--soft);font-weight:500">${GAMES[id].unit}</small></b></div>`; }).join('')}
+    ${yildiz ? `<p class="yildiz">⭐ Günün yıldızı: <b>${GAMES[yildiz.id].name}</b> · Bölüm ${yildiz.n}</p>` : ''}
+    <div class="sumlist">${ids.map(id => { const h = son(id); return `
+      <div class="card"><span class="gico" style="background:${GAMES[id].color}">${ICON[id]}</span><span>${GAMES[id].name}<small class="bno">${h ? 'Bölüm ' + h.b : ''}</small></span><b>${h ? yildizHTML(h.s, 'orta') : '–'}</b></div>`; }).join('')}
       ${S.words[k] && S.words[k].now !== undefined ? `
       <div class="card"><span class="gico" style="background:${WORD_COLOR}">${ICON.kelime}</span><span>Günün Kelimeleri</span><b>${S.words[k].now}/6</b></div>` : ''}
     </div>
